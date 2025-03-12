@@ -8,7 +8,7 @@ import glob
 import jaydebeapi
 from const import QUERY, CONNECT
 import re
-
+import sys
 
 # history digit 1
 conn = jaydebeapi.connect(
@@ -27,7 +27,6 @@ conn.close()
 
 file_current = glob.glob("./input/acc_current/*.csv") 
 file_current = file_current[0].split('\\')[1]
-print(f'file_oa_current :, {file_current} ?? ')
 
 
 data_digit1 = pd.read_csv(f'./input/acc_current/{file_current}')
@@ -36,7 +35,12 @@ data_digit1 = data_digit1[['Loan No']]
 
 
 files_history = glob.glob("./input/acc_history_monthly/*.csv") 
-print(f'file_history :, {files_history} ?? ')
+confirmation = input(f"Are you sure ? file_history : {files_history} ?? (y/n)")
+if confirmation != "y":
+    sys.exit()
+
+
+
 processed_files = []  # Store modified file names
 for i in files_history:
     # print()
@@ -66,7 +70,10 @@ data_all_digit['MOB'] = pd.to_numeric(data_all_digit['MOB'], errors='coerce').fi
 
 # TDH digit2
 files_tdr = glob.glob("./Input/ar_all/*.*")
-print(f'file_files_tdr:, {files_tdr} ?? ')
+confirmation = input(f"Are you sure ? file_files_tdr : {files_tdr} ?? (y/n)")
+if confirmation != "y":
+    sys.exit()
+# print(f'file_files_tdr:, {files_tdr} ?? ')
 
 df_list = []  # Store individual DataFrames
 for file in files_tdr:
@@ -117,13 +124,17 @@ data_cscore['FINAL_SCORE'] =data_cscore['TOTAL_DIGIT1'].astype(str)+ data_cscore
 
 # map assign
 file_assign = glob.glob("./input/assisgn_data/*.xlsx") 
-print(f'file_files_tdr:, {file_assign} ?? ')
+confirmation = input(f"Are you sure ? file_assign : {file_assign} ?? (y/n)")
+if confirmation != "y":
+    sys.exit()
+    
+# print(f'file_files_tdr:, {file_assign} ?? ')
 data_assign = pd.read_excel(file_assign[0])
 data_assign = data_assign[['Loan No.','Old OA','New OA']]
 data_assign['Loan No.'] = data_assign['Loan No.'].astype(str)
 
 # final redult
 file_path = file_assign[0].split('\\')[1]
-cscore_assigned = data_assign.merge(data_all_digit,left_on='Loan No.',right_on='CONTRACT_NO',how='left')
+cscore_assigned = data_assign.merge(data_cscore,left_on='Loan No.',right_on='CONTRACT_NO',how='left')
 cscore_assigned.to_csv(f'./output/assign_{file_path}.csv')
 print('data_assign',data_assign)
