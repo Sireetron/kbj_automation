@@ -8,7 +8,7 @@ import glob
 import jaydebeapi
 from const import QUERY, CONNECT
 import re
-
+import sys
 
 # history digit 1
 conn = jaydebeapi.connect(
@@ -36,7 +36,9 @@ data_digit1 = data_digit1[['Loan No']]
 
 
 files_history = glob.glob("./input/acc_history_monthly/*.csv") 
-print(f'file_history :, {files_history} ?? ')
+# print(f'file_history :, {files_history} ?? ')
+
+
 processed_files = []  # Store modified file names
 for i in files_history:
     # print()
@@ -44,10 +46,15 @@ for i in files_history:
     # print(file)
     processed_files.append(file)  
 his = transform_files(processed_files)
+confirmation = input(f"Are you sure? (y/n) : file_6minth history :, {processed_files} ?? ").strip().lower()
+
+if confirmation != "y":
+    sys.exit()
+    
 # his = [ ['Acc_20250301_0830.csv', 'Acc_20250301_0830'],['Acc_20250201_0830.csv', 'Acc_20250201_0830']]
 for i in his[0:]:
     # print(f"Processing date: {i[0]}")
-    print((i[0], i[1]))
+    # print((i[0], i[1]))
     data = all_history(query,i[0], i[1])
     data_digit1 = data_digit1.merge(data, on='Loan No', how='left')
     
@@ -66,7 +73,11 @@ data_all_digit['MOB'] = pd.to_numeric(data_all_digit['MOB'], errors='coerce').fi
 
 # TDH digit2
 files_tdr = glob.glob("./Input/ar_all/*.*")
-print(f'file_files_tdr:, {files_tdr} ?? ')
+confirmation = input(f"Are you sure? (y/n) : file_files_tdr :,  {files_tdr} ?? ").strip().lower()
+
+if confirmation != "y":
+    sys.exit()
+
 
 df_list = []  # Store individual DataFrames
 for file in files_tdr:
@@ -106,20 +117,21 @@ choices = ['H', 'D', 'H','M','L']
 data_cscore['TOTAL_DIGIT1']= np.select(conditions, choices, default='Other')
 data_cscore['TOTAL_DIGIT2'] = data_cscore['TOTAL_DIGIT2'].map({3: 'H', 2: 'M', 1: 'L'})
 data_cscore['FINAL_SCORE'] =data_cscore['TOTAL_DIGIT1'].astype(str)+ data_cscore['TOTAL_DIGIT2'].astype(str) +'0'+ data_cscore['MOB'].astype(str)
-# data_cscore = data_cscore[['AS_OF_DATE','CONTRACT_NO','GROSS_INCOME','OCCUPATION_NAME','CONTRACT_DATE','CONTRACT_PERIOD',
-#                 'AGE','MOB','DIGIT2INCOME',
-#              'DIGIT2AGE', 'DIGIT2JOB', 'TOTAL_DIGIT2', 'BUCKET_SCORE0mnt', 'BUCKET_SCORE1mnt', 'BUCKET_SCORE2mnt',
-#        'BUCKET_SCORE3mnt', 'BUCKET_SCORE4mnt', 'BUCKET_SCORE5mnt', 'AVG_DIGIT1','TOTAL_DIGIT1', 'Project Code Name' ]]
-# print('data_all_digit',data_all_digit)
+
 
 
 
 
 # map assign
-file_assign = glob.glob("./input/assisgn_data/*.xlsx") 
-print(f'file_files_tdr:, {file_assign} ?? ')
+file_assign = glob.glob("./input/assign_data/*.xlsx") 
+confirmation = input(f"Are you sure? (y/n) : file_assign :, {file_assign}  ?? ").strip().lower()
+
+if confirmation != "y":
+    sys.exit()
+    
+    
 data_assign = pd.read_excel(file_assign[0])
-data_assign = data_assign[['Loan No.','Old OA','New OA']]
+data_assign = data_assign[['Loan No.','Old OA','New OA','Overdue Months Division Code']]
 data_assign['Loan No.'] = data_assign['Loan No.'].astype(str)
 
 
@@ -128,4 +140,4 @@ data_assign['Loan No.'] = data_assign['Loan No.'].astype(str)
 file_path = file_assign[0].split('\\')[1]
 cscore_assigned = data_assign.merge(data_cscore,left_on='Loan No.',right_on='CONTRACT_NO',how='left')
 cscore_assigned.to_csv(f'./output/assign_{file_path}.csv')
-print('data_assign',data_assign)
+# print('data_assign',data_assign)
