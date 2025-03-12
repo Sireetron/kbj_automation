@@ -122,8 +122,10 @@ data_assign = pd.read_excel(file_assign[0])
 data_assign = data_assign[['Loan No.','Old OA','New OA']]
 data_assign['Loan No.'] = data_assign['Loan No.'].astype(str)
 
+
+
 # final redult
 file_path = file_assign[0].split('\\')[1]
-cscore_assigned = data_assign.merge(data_all_digit,left_on='Loan No.',right_on='CONTRACT_NO',how='left')
+cscore_assigned = data_assign.merge(data_cscore,left_on='Loan No.',right_on='CONTRACT_NO',how='left')
 cscore_assigned.to_csv(f'./output/assign_{file_path}.csv')
 print('data_assign',data_assign)
