@@ -20,8 +20,8 @@ def all_history(query,date,item) :
     # print(f'./input/history/{date}')
     data_mnt['Loan No'] = data_mnt['Loan No'].astype(str)
     data_mnt = data_mnt[['Loan No','OverdueCnt_Morning']].merge(query, left_on='OverdueCnt_Morning', right_on='BUCKET', how='left')
-    data_mnt = data_mnt.rename(columns={'SCORE_INDEX': f'SCORE_INDEX{item}mnt'})
-    return data_mnt[['Loan No',f'SCORE_INDEX{item}mnt']]
+    data_mnt = data_mnt.rename(columns={'BUCKET_SCORE': f'BUCKET_SCORE{item}mnt'})
+    return data_mnt[['Loan No',f'BUCKET_SCORE{item}mnt']]
 
 def transform_files(files):
     files.sort(reverse=True)
