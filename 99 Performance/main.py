@@ -27,7 +27,7 @@ conn.close()
 
 file_current = glob.glob("./input/acc_current/*.csv") 
 file_current = file_current[0].split('\\')[1]
-print(f'file_oa_current :, {file_current} ?? ')
+# print(f'file_oa_current :, {file_current} ?? ')
 
 
 data_digit1 = pd.read_csv(f'./input/acc_current/{file_current}')
@@ -46,10 +46,10 @@ for i in files_history:
     # print(file)
     processed_files.append(file)  
 his = transform_files(processed_files)
-confirmation = input(f"Are you sure? (y/n) : file_6minth history :, {processed_files} ?? ").strip().lower()
+# confirmation = input(f"Are you sure? (y/n) : file_6minth history :, {processed_files} ?? ").strip().lower()
 
-if confirmation != "y":
-    sys.exit()
+# if confirmation != "y":
+#     sys.exit()
     
 # his = [ ['Acc_20250301_0830.csv', 'Acc_20250301_0830'],['Acc_20250201_0830.csv', 'Acc_20250201_0830']]
 for i in his[0:]:
@@ -73,10 +73,9 @@ data_all_digit['MOB'] = pd.to_numeric(data_all_digit['MOB'], errors='coerce').fi
 
 # TDH digit2
 files_tdr = glob.glob("./Input/ar_all/*.*")
-confirmation = input(f"Are you sure? (y/n) : file_files_tdr :,  {files_tdr} ?? ").strip().lower()
-
-if confirmation != "y":
-    sys.exit()
+# confirmation = input(f"Are you sure? (y/n) : file_files_tdr :,  {files_tdr} ?? ").strip().lower()
+# if confirmation != "y":
+#     sys.exit()
 
 
 df_list = []  # Store individual DataFrames
@@ -124,10 +123,10 @@ data_cscore['FINAL_SCORE'] =data_cscore['TOTAL_DIGIT1'].astype(str)+ data_cscore
 
 # map assign
 file_assign = glob.glob("./input/assign_data/*.xlsx") 
-confirmation = input(f"Are you sure? (y/n) : file_assign :, {file_assign}  ?? ").strip().lower()
+# confirmation = input(f"Are you sure? (y/n) : file_assign :, {file_assign}  ?? ").strip().lower()
 
-if confirmation != "y":
-    sys.exit()
+# if confirmation != "y":
+#     sys.exit()
     
     
 data_assign = pd.read_excel(file_assign[0])
@@ -139,5 +138,5 @@ data_assign['Loan No.'] = data_assign['Loan No.'].astype(str)
 # final redult
 file_path = file_assign[0].split('\\')[1]
 cscore_assigned = data_assign.merge(data_cscore,left_on='Loan No.',right_on='CONTRACT_NO',how='left')
-cscore_assigned.to_csv(f'./output/assign_{file_path}.csv')
+cscore_assigned.to_csv(f'./output/cscore_assigned_{file_path}.csv')
 # print('data_assign',data_assign)
