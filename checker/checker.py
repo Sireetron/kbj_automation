@@ -15,8 +15,8 @@ def clean_column_names(df):
     df.columns = df.columns.str.lower()  
     df.columns = df.columns.str.replace(r'\.', '', regex=True)
     df.columns = df.columns.str.replace(r' ', '_', regex=True)  
-    df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id', 'customer_no', regex=True) 
-    df.columns = df.columns.str.replace(r'loan|loan_no|contract.*', 'contract_no', regex=True)
+    df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True) 
+    df.columns = df.columns.str.replace(r'loan_no|contract.*', 'contract_no', regex=True)
     df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
     df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  
     return df
@@ -32,26 +32,29 @@ def checker() :
     # print('filefilesfiless',files)
 
 
+
     # Read only the first file found
     if files:
         file_path = files[0]
         if file_path.endswith(".xlsx"):
             assign = pd.read_excel(file_path,sheet_name='Data SMS', dtype={'MobileNo': str})
-            print('assignassignassign',assign)
+            # print('assignassignassign',assign)
         elif file_path.endswith(".csv"):
             assign = pd.read_csv(file_path,sheet_name='Data SMS', dtype={'MobileNo': str})   
     else:
         print("No file found in the folder.")
 
 
-
     # //////////////////*********************************************/////////////////////************************ #
+
 
 
     assign_delay = clean_column_names(assign)
     customer = pd.read_csv('./checker/input/customer_input/customerdata.csv', dtype={'mobile_phone_no_val': str, 
                                                             'natioanal_id_val': str, 
                                                             'contract_no_val': str})
+
+
 
 
     # //////////////////*********************************************/////////////////////************************ #
@@ -86,32 +89,34 @@ def checker() :
 
     # //////////////////*********************************************/////////////////////************************ #
 
-    assign_delay['customer_name'] = assign_delay['customer_name'].str.strip()
-    assign_delay[['name', 'surname']] = assign_delay['customer_name'].str.split(n=1, expand=True)
+    
+    
+    # assign_delay['customer_name'] = assign_delay['customer_name'].str.strip()
+    # assign_delay[['name', 'surname']] = assign_delay['customer_name'].str.split(n=1, expand=True)
 
     # //////////////////*********************************************/////////////////////************************ #
 
 
     assign_delay_merge = assign_delay.merge(customer, left_on=['customer_no', 'contract_no'], right_on=['national_id' ,'contract_no_val'], how='left')
-    assign_delay_merge['name_check'] = assign_delay_merge.apply(
-        lambda row: True if row['name'] == row['name_val'] else row['name_val'],
-        axis=1
-    )
+    # assign_delay_merge['name_check'] = assign_delay_merge.apply(
+    #     lambda row: True if row['name'] == row['name_val'] else row['name_val'],
+    #     axis=1
+    # )
 
-    assign_delay_merge['surname_check'] = assign_delay_merge.apply(
-        lambda row: True if row['surname'] == row['surname_val'] else row['surname_val'],
-        axis=1
-    )
+    # assign_delay_merge['surname_check'] = assign_delay_merge.apply(
+    #     lambda row: True if row['surname'] == row['surname_val'] else row['surname_val'],
+    #     axis=1
+    # )
 
     assign_delay_merge['mobile_check'] = assign_delay_merge.apply(
         lambda row: True if row['mobile_no'] == row['mobile_phone_no_val'] else row['mobile_phone_no_val'],
         axis=1
     )
 
-    assign_delay_merge['fullname_check'] = assign_delay_merge.apply(
-        lambda row: row['customer_name'] if row['name'] == row['name_val'] and row['surname'] == row['surname_val']  else row['name_val'] + ' ' +row['surname_val'] ,
-        axis=1
-    )
+    # assign_delay_merge['fullname_check'] = assign_delay_merge.apply(
+    #     lambda row: row['customer_name'] if row['name'] == row['name_val'] and row['surname'] == row['surname_val']  else row['name_val'] + ' ' +row['surname_val'] ,
+    #     axis=1
+    # )
 
 
 

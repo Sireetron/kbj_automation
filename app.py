@@ -1,40 +1,58 @@
-from flask import Flask, render_template, request
-import pandas as pd
+from flask import Flask, render_template, request, send_from_directory
 import os
 from flask_wtf import FlaskForm
-from wtforms import FileField,SubmitField
+from wtforms import FileField, SubmitField
 from werkzeug.utils import secure_filename
 from checker.checker import checker
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
-app.config['UPLOAD_FOLDER'] = 'checker/input/assign_input'
-# # Ensure folders exist
-# os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
+app.config['UPLOAD_FOLDER_SMS'] = 'checker/input/assign_input'
+app.config['DOWNLOAD_FOLDER_SMS'] = 'checker/output/'  # Specify the download folder
+
 
 class UploadFileForm(FlaskForm):
     file = FileField("File")
     submit = SubmitField("Upload File")
-    
-# @app.route('/',methods=('GET','POST'))
-@app.route('/sms-checker',methods=('GET','POST'))
-def home(): 
+
+
+@app.route('/sms-checker', methods=['GET', 'POST'])
+def home():
+    folder_name = 'sms'
     form = UploadFileForm()
+    download_filename = []  # Variable to hold download filename
+    message = f"Please upload a valid SMS_CHECKER file || column need to exactly match column name and type  * mobile_no : varchar * loan_no : varchar *customer_no : varchar"
+
     if form.validate_on_submit():
-        file = form.file.data  # This gets the uploaded file
-        if file:  # Ensure the file is valid
+        file = form.file.data  # Get the uploaded file
+        if file:  # EnFsure the file is valid
             filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            print('filename',filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER_SMS'], filename)
             file.save(filepath)
-            
-            checker()
-                      
-            return "File has been uploaded successfully!"
-    return render_template('index.html',form=form)
+            checker()  # Run your processing function
+            print('filename',filename)
+            download_filename = filename.replace('.xlsx', '.csv')  # Example conversion
+            # download_filename.append(filename.replace('.xlsx', '.csv'))
+            message = "File uploaded and processed successfully. You can now download the CSV file."
+           
+    return render_template('index.html', form=form, download_filename=f'check{download_filename}', message=message, folder_name=folder_name)
+
+
+
+
+@app.route('/download/<folder>/<filename>')
+def download_file(folder,filename):
+    if folder == 'sms':
+            download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_SMS'])  # Default download folder
+    elif folder == 'version2':
+        download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_2'])  # Different download folder
+    else:
+        return "Folder not found", 404  # Handle invalid folder name
+    
+    return send_from_directory(download_path, filename, as_attachment=True)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
-
+    app.run(debug=True, use_reloader=True)

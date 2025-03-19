@@ -6,13 +6,18 @@
     <title>Upload CSV</title>
 </head>
 <body>
-    <h1>Upload a CSV File</h1>
+    <h1>Upload a SMS_CHECKER File</h1>
     <form method="POST" enctype="multipart/form-data">
         {{form.hidden_tag()}}
         {{form.file()}}
         {{form.submit()}}
     </form>
-
+    <p>{{ message }}</p>
+     {% if download_filename %}
+        <a href="{{ url_for('download_file', folder=folder_name, filename=download_filename) }}">
+            <button>Download</button>
+        </a>
+    {% endif %}
   
 
 </body>
