@@ -28,16 +28,34 @@ def home():
         file = form.file.data  # Get the uploaded file
         if file:  # EnFsure the file is valid
             filename = secure_filename(file.filename)
-            print('filename',filename)
+            # print('filename',filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER_SMS'], filename)
             file.save(filepath)
             checker()  # Run your processing function
-            print('filename',filename)
+            # print('filename',filename)
             download_filename = filename.replace('.xlsx', '.csv')  # Example conversion
             # download_filename.append(filename.replace('.xlsx', '.csv'))
             message = "File uploaded and processed successfully. You can now download the CSV file."
            
     return render_template('index.html', form=form, download_filename=f'check{download_filename}', message=message, folder_name=folder_name)
+
+
+
+@app.route('/upload_file', methods=['GET', 'POST'])
+def upload():
+    folder_name = 'sms'
+    form = UploadFileForm()
+    download_filename = [] 
+    message = f"Please upload a valid SMS_CHECKER file || column need to exactly match column name and type  * mobile_no : varchar * loan_no : varchar *customer_no : varchar"
+    if request.method == 'POST':
+        for f in request.files.getlist('file_name'):
+            
+            f.save(os.path.join(app.config['UPLOAD_FOLDER_SMS'],f.filename))
+            message = "File uploaded and processed successfully. You can now download the CSV file."
+        return render_template('upload.html', message=message)
+    return render_template('upload.html', message='Please choose file')
+
+
 
 
 
