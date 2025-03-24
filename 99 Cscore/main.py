@@ -10,14 +10,47 @@ from const import QUERY, CONNECT
 import re
 import sys
 
-# history digit 1
+def read_file(pathfile,filename):
+    if filename:
+        if filename.endswith(".xlsx"):
+            file = pd.read_excel(f'{pathfile}{filename}')
+        elif filename.endswith(".csv"):
+            encodings = ["utf-8", "ISO-8859-1", "latin1", "utf-16"]
+            for enc in encodings:
+                try:
+                    file = pd.read_csv(f'{pathfile}{filename}', encoding=enc)
+                    # print(f"Successfully read {filename} using {enc} encoding.")
+                    return file
+                except UnicodeDecodeError:
+                    print(f"Encoding error with {enc}, trying another...")
+            # file = pd.read_csv(f'{pathfile}{filename}', encoding='ISO-8859-1')
+        # return file  
+    # print(assign.head())  # Display first few rows
+    else:
+        print("No file found in the folder.")
+    
+    
+    
+def clean_column_names(df):
+    df.columns = df.columns.str.lower()  # Convert to lowercase
+    df.columns = df.columns.str.replace(r'\.', '', regex=True)
+    df.columns = df.columns.str.replace(r' ', '_', regex=True)  # Replace non-alphanumeric characters with underscores
+    df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True)  # Replace variations with 'customer_no'
+    df.columns = df.columns.str.replace(r'loan_no', 'contract_no', regex=True)
+    df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
+    df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  # Replace 'customer_name/surname(thai)' with 'customer_name'
+    return df    
+
+
+
+# ===history digit 1====
 conn = jaydebeapi.connect(
         CONNECT.DB,
         CONNECT.PORT,
         CONNECT.USER,
         CONNECT.CNN,
         )
-cur = conn.cursor()  
+cur = conn.cursor() 	
 
 query = pd.read_sql(f'''
       SELECT * FROM SIREETRON.bucket_score  
@@ -25,14 +58,19 @@ query = pd.read_sql(f'''
 conn.close()
 
 
-file_current = glob.glob("./input/acc_current/*.csv") 
+# =======================ตั้งต้น===================================
+
+file_current = glob.glob("./input/acc_current/*") 
 file_current = file_current[0].split('\\')[1]
 # print(f'file_oa_current :, {file_current} ?? ')
 
 
-data_digit1 = pd.read_csv(f'./input/acc_current/{file_current}')
-data_digit1['Loan No'] = data_digit1['Loan No'].astype(str)
-data_digit1 = data_digit1[['Loan No']]
+
+data_digit1 = read_file('./input/acc_current/',file_current)
+data_digit1 = clean_column_names(data_digit1)
+# data_digit1 = pd.read_csv(f'./input/acc_current/{file_current}')
+data_digit1['contract_no'] = data_digit1['contract_no'].astype(str)
+data_digit1 = data_digit1[['contract_no']]
 
 
 files_history = glob.glob("./input/acc_history_monthly/*.csv") 
@@ -56,66 +94,68 @@ for i in his[0:]:
     # print(f"Processing date: {i[0]}")
     # print((i[0], i[1]))
     data = all_history(query,i[0], i[1])
-    data_digit1 = data_digit1.merge(data, on='Loan No', how='left')
+    data = clean_column_names(data)
+    data_digit1 = data_digit1.merge(data, on='contract_no', how='left')
     
     
     
 # performane digit2
-data_performance = pd.read_csv('./input/performance/performance.csv')
-data_digit1['Loan No'] = data_digit1['Loan No'].astype(str)
-data_performance['CONTRACT_NO']= data_performance['CONTRACT_NO'].astype(str)
-data_digit1['AVG_DIGIT1'] = data_digit1.loc[:, data_digit1.columns.str.startswith('BUCKET_SCORE')].apply(pd.to_numeric, errors='coerce').sum(axis=1).fillna(0).astype(int)/6
-data_all_digit = data_performance.merge(data_digit1, left_on='CONTRACT_NO', right_on='Loan No', how='left')
+data_performance = pd.read_csv('./input/performance_peronal_info/performance.csv')
+data_performance = clean_column_names(data_performance)
+# ==============================================================================================================================
+
+data_digit1['contract_no'] = data_digit1['contract_no'].astype(str)
+data_performance['contract_no']= data_performance['contract_no'].astype(str)
+data_digit1['avg_digit1'] = data_digit1.loc[:, data_digit1.columns.str.startswith('bucket_score')].apply(pd.to_numeric, errors='coerce').sum(axis=1).fillna(0).astype(int)/6
+data_all_digit = data_performance.merge(data_digit1, left_on='contract_no', right_on='contract_no', how='left')
 # data_all_digit['AVG_DIGIT1'] = data_all_digit.loc[:, data_all_digit.columns.str.startswith('SCORE_INDEX')].apply(pd.to_numeric, errors='coerce').mean(axis=1).fillna(0).astype(int)
-data_all_digit['MOB'] = pd.to_numeric(data_all_digit['MOB'], errors='coerce').fillna(0).astype(int)
+data_all_digit['mob'] = pd.to_numeric(data_all_digit['mob'], errors='coerce').fillna(0).astype(int)
 
 
 
 # TDH digit2
-files_tdr = glob.glob("./Input/ar_all/*.*")
-# confirmation = input(f"Are you sure? (y/n) : file_files_tdr :,  {files_tdr} ?? ").strip().lower()
-# if confirmation != "y":
-#     sys.exit()
-
-
+files_tdr = glob.glob("./Input/ar_all/*.*")   
 df_list = []  # Store individual DataFrames
 for file in files_tdr:
     # print(f"Reading {file}...")
-    df = pd.read_csv(file, encoding='cp874', low_memory=False)
+    path = glob.glob(f"{file}")[0].split('\\')[-1]
+    # print(path)
+    df = read_file('./input/ar_all/',path)
     df_list.append(df)
+    
+    
 data_tdr = pd.concat(df_list, ignore_index=True)
-
-data_tdr['Loan No'] = data_tdr['Loan No'].astype(str).apply(lambda x: re.sub(r'\D', '', x))
+data_tdr = clean_column_names(data_tdr)
+data_tdr['contract_no'] = data_tdr['contract_no'].astype(str).apply(lambda x: re.sub(r'\D', '', x))
 data_tdr = data_tdr.loc[
-    (data_tdr['Product'] == 'TL') & 
+    (data_tdr['product'] == 'TL') & 
     (
-        data_tdr['Project Code Name'].str.contains('ปรับโครงสร้าง', na=False) | 
-        data_tdr['Project Code Name'].str.contains('TDR', na=False) | 
-        data_tdr['Project Code Name'].str.contains('DR', na=False)
+        data_tdr['project_code_name'].str.contains('ปรับโครงสร้าง', na=False) | 
+        data_tdr['project_code_name'].str.contains('TDR', na=False) | 
+        data_tdr['project_code_name'].str.contains('DR', na=False)
     )
-].reset_index(drop=True)[['Loan No','Project Code Name']]
+].reset_index(drop=True)[['contract_no','project_code_name']]
 
 
 # =======merge=========
-data_cscore = data_all_digit.merge(data_tdr, left_on='CONTRACT_NO', right_on='Loan No', how='left')
+data_cscore = data_all_digit.merge(data_tdr, left_on='contract_no', right_on='contract_no', how='left')
 # =======merge=========
 
-# print('data_cscore', data_cscore['AVG_DIGIT1'])
 
 # Define conditions
 conditions = [
-    data_cscore['Project Code Name'].notna(),      # A is not null
-    data_cscore['MOB'] < 7,          # A is less than 7
-    data_cscore['AVG_DIGIT1'] > 3  ,
-    data_cscore['AVG_DIGIT1'] > 1,# C is equal to 3
-    data_cscore['AVG_DIGIT1'] >= 0,
+    data_cscore['project_code_name'].notna(),      # A is not null
+    data_cscore['mob'] < 7,          # A is less than 7
+    data_cscore['avg_digit1'] > 3  ,
+    data_cscore['avg_digit1'] > 1,# C is equal to 3
+    data_cscore['avg_digit1'] >= 0,
 ]
 
 # Define corresponding values
 choices = ['H', 'D', 'H','M','L']
-data_cscore['TOTAL_DIGIT1']= np.select(conditions, choices, default='Other')
-data_cscore['TOTAL_DIGIT2'] = data_cscore['TOTAL_DIGIT2'].map({3: 'H', 2: 'M', 1: 'L'})
-data_cscore['FINAL_SCORE'] =data_cscore['TOTAL_DIGIT1'].astype(str)+ data_cscore['TOTAL_DIGIT2'].astype(str) +'0'+ data_cscore['MOB'].astype(str)
+data_cscore['total_digit1']= np.select(conditions, choices, default='Other')
+data_cscore['total_digit2'] = data_cscore['total_digit2'].map({3: 'H', 2: 'M', 1: 'L'})
+data_cscore['final_score'] =data_cscore['total_digit1'].astype(str)+ data_cscore['total_digit2'].astype(str) +'0'+ data_cscore['mob'].astype(str)
 
 
 
@@ -130,13 +170,14 @@ file_assign = glob.glob("./input/assign_data/*.xlsx")
     
     
 data_assign = pd.read_excel(file_assign[0])
-data_assign = data_assign[['Loan No.','Old OA','New OA','Overdue Months Division Code']]
-data_assign['Loan No.'] = data_assign['Loan No.'].astype(str)
+data_assign = clean_column_names(data_assign)
+data_assign = data_assign[['contract_no','old_oa','new_oa','overdue_months_division_code']]
+data_assign['contract_no'] = data_assign['contract_no'].astype(str)
 
 
 
 # final redult
 file_path = file_assign[0].split('\\')[1]
-cscore_assigned = data_assign.merge(data_cscore,left_on='Loan No.',right_on='CONTRACT_NO',how='left')
+cscore_assigned = data_assign.merge(data_cscore,left_on='contract_no',right_on='contract_no',how='left')
 cscore_assigned.to_csv(f'./output/cscore_assigned_{file_path}.csv')
 # print('data_assign',data_assign)

@@ -74,10 +74,10 @@ def checker() :
             )
     cur = conn.cursor()  
 
-
-    sms_type = pd.read_sql(QUERY.SMS_WORDING, conn) 
+    sms_type = pd.read_sql(f'''
+        SELECT * FROM SIREETRON.REF_SMS_WORDING 
+        ''', conn) 
     conn.close()
-    sms_type = clean_column_names(sms_type)
 
     # //////////////////*********************************************/////////////////////************************ #
 

@@ -27,3 +27,34 @@ def transform_files(files):
     files.sort(reverse=True)
     latest_files = files
     return [[file,  re.sub(r'\.csv$', '', file)] for file in latest_files]
+
+
+
+def read_file(pathfile,filename):
+    if filename:
+        if filename.endswith(".xlsx"):
+            file = pd.read_excel(f'{pathfile}{filename}')
+        elif filename.endswith(".csv"):
+            encodings = ["utf-8", "ISO-8859-1", "latin1", "utf-16"]
+            for enc in encodings:
+                try:
+                    file = pd.read_csv(f'{pathfile}{filename}', encoding=enc)
+                    print(f"Successfully read {filename} using {enc} encoding.")
+                    return file
+                except UnicodeDecodeError:
+                    print(f"Encoding error with {enc}, trying another...")
+            # file = pd.read_csv(f'{pathfile}{filename}', encoding='ISO-8859-1')
+        # return file  
+    # print(assign.head())  # Display first few rows
+    else:
+        print("No file found in the folder.")
+    
+def clean_column_names(df):
+    df.columns = df.columns.str.lower()  # Convert to lowercase
+    df.columns = df.columns.str.replace(r'\.', '', regex=True)
+    df.columns = df.columns.str.replace(r' ', '_', regex=True)  # Replace non-alphanumeric characters with underscores
+    df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True)  # Replace variations with 'customer_no'
+    df.columns = df.columns.str.replace(r'loan_no', 'contract_no', regex=True)
+    df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
+    df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  # Replace 'customer_name/surname(thai)' with 'customer_name'
+    return df    
