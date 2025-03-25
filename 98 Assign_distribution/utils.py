@@ -18,6 +18,8 @@ def clean_column_names(df):
     return df
 
 
+
+
 def read_file(pathfile,filename):
     if filename:
         if filename.endswith(".xlsx"):
@@ -29,6 +31,7 @@ def read_file(pathfile,filename):
     else:
         print("No file found in the folder.")
         
+
 
 
 def split_dataframe_by_group(df, group_column, prefix):

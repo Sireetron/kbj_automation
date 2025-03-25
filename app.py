@@ -16,6 +16,11 @@ class UploadFileForm(FlaskForm):
     file = FileField("File")
     submit = SubmitField("Upload File")
 
+table_checker = [
+    {"customer_no": '7240870103414270', "contract_no": "3250800192489", "customer_name": "อดุXX XXX", "mobile_no": "New York"},
+    {"customer_no": '7241170104203800', "contract_no": "1819900360011", "customer_name": "บุญXX XXX", "mobile_no ": "San Francisco"},
+]
+
 
 @app.route('/sms-checker', methods=['GET', 'POST'])
 def home():
@@ -33,11 +38,15 @@ def home():
             file.save(filepath)
             checker()  # Run your processing function
             # print('filename',filename)
+            
             download_filename = filename.replace('.xlsx', '.csv')  # Example conversion
             # download_filename.append(filename.replace('.xlsx', '.csv'))
             message = "File uploaded and processed successfully. You can now download the CSV file."
            
-    return render_template('index.html', form=form, download_filename=f'check{download_filename}', message=message, folder_name=folder_name)
+    return render_template('index.html', form=form, download_filename=f'check{download_filename}', message=message, folder_name=folder_name, table=table_checker)
+
+
+
 
 
 

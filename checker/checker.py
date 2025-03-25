@@ -16,7 +16,7 @@ def clean_column_names(df):
     df.columns = df.columns.str.replace(r'\.', '', regex=True)
     df.columns = df.columns.str.replace(r' ', '_', regex=True)  
     df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True) 
-    df.columns = df.columns.str.replace(r'loan_no|contract.*', 'contract_no', regex=True)
+    df.columns = df.columns.str.replace(r'loan|loan_no|contract.*', 'contract_no', regex=True)
     df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
     df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  
     return df
@@ -50,10 +50,10 @@ def checker() :
 
 
     assign_delay = clean_column_names(assign)
-    customer = pd.read_csv('./checker/input/customer_input/customerdata.csv', dtype={'mobile_phone_no_val': str, 
-                                                            'natioanal_id_val': str, 
-                                                            'contract_no_val': str})
-
+    customer = pd.read_csv('./checker/input/customer_input/customerdata.csv', dtype={'MOBILE_PHONE_NO_VAL': str, 
+                                                            'NATIONAL_ID': str, 
+                                                            'CONTRACT_NO_VAL': str})
+    customer.columns = customer.columns.str.lower()  
 
 
 
@@ -81,7 +81,7 @@ def checker() :
 
     # //////////////////*********************************************/////////////////////************************ #
 
-    assign_delay = assign_delay.merge(sms_type,left_on='sms_type',right_on = 'sms_type', how='left')
+    # assign_delay = assign_delay.merge(sms_type,left_on='sms_type',right_on = 'sms_type', how='left')
     assign_delay['customer_no'] = assign_delay['customer_no'].astype(str)
     assign_delay['contract_no'] = assign_delay['contract_no'].astype(str)
     customer['contract_no_val'] = customer['contract_no_val'].astype(str)
@@ -91,37 +91,37 @@ def checker() :
 
     
     
-    # assign_delay['customer_name'] = assign_delay['customer_name'].str.strip()
-    # assign_delay[['name', 'surname']] = assign_delay['customer_name'].str.split(n=1, expand=True)
+    assign_delay['customer_name'] = assign_delay['customer_name'].str.strip()
+    assign_delay[['name', 'surname']] = assign_delay['customer_name'].str.split(n=1, expand=True)
 
     # //////////////////*********************************************/////////////////////************************ #
 
 
     assign_delay_merge = assign_delay.merge(customer, left_on=['customer_no', 'contract_no'], right_on=['national_id' ,'contract_no_val'], how='left')
-    # assign_delay_merge['name_check'] = assign_delay_merge.apply(
-    #     lambda row: True if row['name'] == row['name_val'] else row['name_val'],
-    #     axis=1
-    # )
+    assign_delay_merge['name_check'] = assign_delay_merge.apply(
+        lambda row: True if row['name'] == row['name_val'] else row['name_val'],
+        axis=1
+    )
 
-    # assign_delay_merge['surname_check'] = assign_delay_merge.apply(
-    #     lambda row: True if row['surname'] == row['surname_val'] else row['surname_val'],
-    #     axis=1
-    # )
+    assign_delay_merge['surname_check'] = assign_delay_merge.apply(
+        lambda row: True if row['surname'] == row['surname_val'] else row['surname_val'],
+        axis=1
+    )
 
     assign_delay_merge['mobile_check'] = assign_delay_merge.apply(
         lambda row: True if row['mobile_no'] == row['mobile_phone_no_val'] else row['mobile_phone_no_val'],
         axis=1
     )
 
-    # assign_delay_merge['fullname_check'] = assign_delay_merge.apply(
-    #     lambda row: row['customer_name'] if row['name'] == row['name_val'] and row['surname'] == row['surname_val']  else row['name_val'] + ' ' +row['surname_val'] ,
-    #     axis=1
-    # )
+    assign_delay_merge['fullname_check'] = assign_delay_merge.apply(
+        lambda row: row['customer_name'] if row['name'] == row['name_val'] and row['surname'] == row['surname_val']  else row['name_val'] + ' ' +row['surname_val'] ,
+        axis=1
+    )
 
 
 
     assign_delay_merge['last4digit_val'] = assign_delay_merge['contract_no'].str[-4:]
-    assign_delay_merge['sms_wording'] = assign_delay_merge.apply(lambda row: row['sms_wording'].replace("{4digit}", str(row['last4digit_val'])), axis=1)
+    # assign_delay_merge['sms_wording'] = assign_delay_merge.apply(lambda row: row['sms_wording'].replace("{4digit}", str(row['last4digit_val'])), axis=1)
 
     # //////////////////*********************************************/////////////////////************************ #
 
