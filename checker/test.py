@@ -16,10 +16,11 @@ def clean_column_names(df):
     df.columns = df.columns.str.replace(r'\.', '', regex=True)
     df.columns = df.columns.str.replace(r' ', '_', regex=True)  
     df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True) 
-    df.columns = df.columns.str.replace(r'loan_no|contract.*', 'contract_no', regex=True)
+    df.columns = df.columns.str.replace(r'loan_no', 'contract_no', regex=True)
     df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
     df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  
     return df
+
 
 # def checker() :
 # Define the input folder
@@ -37,10 +38,10 @@ files = glob.glob(os.path.join(input_folder, "*.xlsx")) + glob.glob(os.path.join
 if files:
     file_path = files[0]
     if file_path.endswith(".xlsx"):
-        assign = pd.read_excel(file_path,sheet_name='Data SMS', dtype={'MobileNo': str})
+        assign = pd.read_excel(file_path,sheet_name='Data', dtype={'MobileNo': str})
         # print('assignassignassign',assign)
     elif file_path.endswith(".csv"):
-        assign = pd.read_csv(file_path,sheet_name='Data SMS', dtype={'MobileNo': str})   
+        assign = pd.read_csv(file_path,sheet_name='Data', dtype={'MobileNo': str})   
 else:
     print("No file found in the folder.")
 
@@ -50,9 +51,10 @@ else:
 
 
 assign_delay = clean_column_names(assign)
-customer = pd.read_csv('./input/customer_input/customerdata.csv', dtype={'mobile_phone_no_val': str, 
-                                                        'natioanal_id_val': str, 
-                                                        'contract_no_val': str})
+customer = pd.read_csv('./input/customer_input/customerdata.csv', dtype={'MOBILE_PHONE_NO_VAL': str, 
+                                                        'NATIONAL_ID': str, 
+                                                        'CONTRACT_NO_VAL': str})
+customer.columns = customer.columns.str.lower()  
 
 
 
@@ -66,27 +68,27 @@ customer = pd.read_csv('./input/customer_input/customerdata.csv', dtype={'mobile
 #     USER = ["supat", "coll_sp@2025"]
 #     CNN = "tibero6-jdbc.jar"
     
-conn = jaydebeapi.connect(
-        CONNECT.DB,
-        CONNECT.PORT,
-        CONNECT.USER,
-        CONNECT.CNN,
-        )
-cur = conn.cursor()  
+# conn = jaydebeapi.connect(
+#         CONNECT.DB,
+#         CONNECT.PORT,
+#         CONNECT.USER,
+#         CONNECT.CNN,
+#         )
+# cur = conn.cursor()  
 
 
-sms_type = pd.read_sql(QUERY.SMS_WORDING, conn) 
+# sms_type = pd.read_sql(QUERY.SMS_WORDING, conn) 
 
-conn.close()
-sms_type = clean_column_names(sms_type)
+# conn.close()
+# sms_type = clean_column_names(sms_type)
 
 # //////////////////*********************************************/////////////////////************************ #
 
-assign_delay = assign_delay.merge(sms_type,left_on='sms_type',right_on = 'sms_type', how='left')
-assign_delay['customer_no'] = assign_delay['customer_no'].astype(str)
+# assign_delay = assign_delay.merge(sms_type,left_on='sms_type',right_on = 'sms_type', how='left')
+# assign_delay['customer_no'] = assign_delay['customer_no'].astype(str)
 assign_delay['contract_no'] = assign_delay['contract_no'].astype(str)
 customer['contract_no_val'] = customer['contract_no_val'].astype(str)
-customer['national_id'] = customer['national_id'].astype(str) 
+# customer['national_id'] = customer['national_id'].astype(str) 
 
 # //////////////////*********************************************/////////////////////************************ #
 
@@ -98,7 +100,10 @@ customer['national_id'] = customer['national_id'].astype(str)
 # //////////////////*********************************************/////////////////////************************ #
 
 
-assign_delay_merge = assign_delay.merge(customer, left_on=['customer_no', 'contract_no'], right_on=['national_id' ,'contract_no_val'], how='left')
+# assign_delay_merge = assign_delay.merge(customer, left_on=['customer_no', 'contract_no'], right_on=['national_id' ,'contract_no_val'], how='left')
+assign_delay_merge = assign_delay.merge(customer, left_on='contract_no', right_on='contract_no_val', how='left')
+
+
 # assign_delay_merge['name_check'] = assign_delay_merge.apply(
 #     lambda row: True if row['name'] == row['name_val'] else row['name_val'],
 #     axis=1
@@ -122,7 +127,7 @@ assign_delay_merge['mobile_check'] = assign_delay_merge.apply(
 
 
 assign_delay_merge['last4digit_val'] = assign_delay_merge['contract_no'].str[-4:]
-assign_delay_merge['sms_wording'] = assign_delay_merge.apply(lambda row: row['sms_wording'].replace("{4digit}", str(row['last4digit_val'])), axis=1)
+# assign_delay_merge['sms_wording'] = assign_delay_merge.apply(lambda row: row['sms_wording'].replace("{4digit}", str(row['last4digit_val'])), axis=1)
 
 # //////////////////*********************************************/////////////////////************************ #
 
