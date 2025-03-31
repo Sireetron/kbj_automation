@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+ <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CSV</title>
+</head>
+
+<body>
+    <h1>SMS_CHECKER File</h1>
+
+    
+    <form method="POST" enctype="multipart/form-data">
+        {{form.hidden_tag()}}
+        {{form.file()}}
+        {{form.submit()}}
+    </form>
+
+    <form method="POST" enctype="multipart/form-data">
+        {{form.hidden_tag()}}
+        {{form.file()}}
+        {{form.submit()}}
+    </form>
+
+
+
+    
+    <p>{{ message }}</p>
+
+    <body class="container mt-4">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>contract_no</th>
+                    <th>mobile_no</th>
+                    <th>sms_type</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in table %}
+                <tr>
+        
+                    <td>{{ row.contract_no }}</td>
+                    <td>{{ row.mobile_no }}</td>
+                    <td>{{ row.sms_type }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+
+    <p>
+     {% if download_filename %}
+        <a href="{{ url_for('download_file', folder=folder_name, filename=download_filename) }}">
+            <button>Download</button>
+        </a>
+    {% endif %}
+    </p>
+
+
+</body>
+
+</html> 
+

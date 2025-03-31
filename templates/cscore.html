@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h2>CSCORE Files</h2>
+    <p>
+        {% for msg in messages %}
+            <div>{{ msg }}</div>
+        {% endfor %}
+    </p>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+    
+        <h2>acc_current</h2>
+        <i>--  (csv)ใช้ AR เดือนล่าสุดตั้งต้น ไฟล์ชื่ออะไรก็ได้ แต่ต้องมี column name contract_no </i>
+        <br></br>
+        <input type="file" name="file_acc_current" multiple>
+        <button type="submit" name="submit_section" value="acc_current">Upload acc_current</button>
+
+
+
+
+        <h2>acc_history</h2>
+        <i>--  (csv)ใช้ AR ย้อนหลัง 6 เดือน อัพโหลดได้หลายไฟล์ ไฟล์ชื่ออะไรก็ได้ แต่ต้องมี column name contract_no </i>
+        <br></br>
+        <input type="file" name="file_acc_history" multiple>
+        <button type="submit" name="submit_section" value="acc_history">Upload  acc_history</button>
+
+
+
+        <h2>tdr</h2>
+        <i>-- (csv/xlsx) ใช้ ไฟล์ TDR อัพโหลดได้ 1 ไฟล์ หรืออาจ หลายไฟล์ ระบบจะเอามาต่อกันให้ แต่ต้องเป็นpattern เดียวกันถ้าต้องการต่อ แต่ต้องมี column name  contract_no, product,project_code_name</i>
+        <br></br>
+        <input type="file" name="file_tdr" multiple>
+        <button type="submit" name="submit_section" value="tdr">Upload  tdr</button>
+
+        <h2>assign</h2>
+        <i>-- (xlsx) จะอัพโหลดหรือไม่อัพโหลดก็ได้ ถ้าได้โหลด จะได้ Cscore ของทุก account ถ้ามี
+             assign จะได้ทั้ง ไฟล์ทั้งหมด และไฟล์ที่ assign ไฟล์จะโหลดออกมาเป็น Zip ไฟล์  แต่ต้องมี column name  contract_no, product,project_code_name</i>
+        <br></br>
+        <input type="file" name="file_assign" multiple>
+        <button type="submit" name="submit_section" value="assign">Upload assign</button>
+    
+       
+    </form>
+    
+
+    <h2>----------------------------------------------------------</h2>
+    <p>
+        {% if folder_name %}
+        <a href="{{ url_for('process_and_download_file_cscore', folder_name=folder_name) }}">
+            <button>Download All Files</button>
+        </a>
+        {% endif %}
+    </p>
+</body>
+</html>

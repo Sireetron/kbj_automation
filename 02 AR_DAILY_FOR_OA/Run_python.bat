@@ -1,5 +1,5 @@
 @echo off
 
 cd /D "%~dp0"
-python main.py
+pipenv install & pipenv run python main.py
 pause
