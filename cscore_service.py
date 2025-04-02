@@ -43,7 +43,12 @@ def cscore():
             upload_folder = app.config.get(folder_mapping.get(section))  # Default folder
             # print('upload_folder',upload_folder)
             for file in glob.glob(os.path.join(upload_folder, "*")):
+                print('file',file)
                 os.remove(file)
+            files_assign = glob.glob('cscore/input/assign_data/*.xlsx') + glob.glob('cscore/input/assign_data/*.csv')
+            for file in files_assign:
+                os.remove(file)
+                
             saved_files = []
             for file in files:
                 # print('file',file)
