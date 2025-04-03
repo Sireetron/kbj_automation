@@ -169,12 +169,12 @@ def cscore_app() :
     data_cscore['total_digit2'] = data_cscore['total_digit2'].map({3: 'H', 2: 'M', 1: 'L'})
     data_cscore['final_score'] =data_cscore['total_digit1'].astype(str)+ data_cscore['total_digit2'].astype(str) +'0'+ data_cscore['mob'].astype(str)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    data_cscore.to_csv(f'./cscore/output_backup/all_csore_createat{timestamp}.csv')
+    data_cscore.to_csv(f'./cscore/output_backup/all_csore_createat{timestamp}.csv',index=False)
     
     output_dir = "./cscore/output/"
     for file in glob.glob(os.path.join(output_dir, "*")):
         os.remove(file)
-    data_cscore.to_csv(f'./cscore/output/all_csore.csv')
+    data_cscore.to_csv(f'./cscore/output/all_csore.csv',index=False)
 
 
 
@@ -191,5 +191,5 @@ def cscore_app() :
         file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])
         cscore_assigned = data_assign.merge(data_cscore,left_on='contract_no',right_on='contract_no',how='left')
         cscore_assigned = cscore_assigned[['contract_no','final_score']]
-        cscore_assigned.to_excel(f'./cscore/output_backup/cscore_assigned_{file_path}_createat{timestamp}.xlsx')
-        cscore_assigned.to_excel(f'./cscore/output/cscore_assigned_{file_path}.xlsx')
+        cscore_assigned.to_excel(f'./cscore/output_backup/cscore_assigned_{file_path}_createat{timestamp}.xlsx',index=False)
+        cscore_assigned.to_excel(f'./cscore/output/cscore_assigned_{file_path}.xlsx',index=False)
