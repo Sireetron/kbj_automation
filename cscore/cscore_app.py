@@ -20,6 +20,7 @@ def all_history(query,date,item) :
     data_mnt['Loan No'] = data_mnt['Loan No'].astype(str)
     data_mnt = data_mnt[['Loan No','OverdueCnt_Morning']].merge(query, left_on='OverdueCnt_Morning', right_on='BUCKET', how='left')
     data_mnt = data_mnt.rename(columns={'BUCKET_SCORE': f'BUCKET_SCORE{item}mnt'})
+    # print(f'{date}',data_mnt[[f'BUCKET_SCORE{item}mnt','Loan No']])
     return data_mnt[['Loan No',f'BUCKET_SCORE{item}mnt']]
 
 
@@ -186,10 +187,11 @@ def cscore_app() :
         data_assign = clean_column_names(data_assign)
         data_assign = data_assign[['contract_no']]
         data_assign['contract_no'] = data_assign['contract_no'].astype(str)
+        data_cscore['contract_no'] = data_cscore['contract_no'].astype(str)
 
         # final redult
         file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])
         cscore_assigned = data_assign.merge(data_cscore,left_on='contract_no',right_on='contract_no',how='left')
-        cscore_assigned = cscore_assigned[['contract_no','final_score']]
+        # cscore_assigned = cscore_assigned[['contract_no','final_score']]
         cscore_assigned.to_excel(f'./cscore/output_backup/cscore_assigned_{file_path}_createat{timestamp}.xlsx',index=False)
         cscore_assigned.to_excel(f'./cscore/output/cscore_assigned_{file_path}.xlsx',index=False)
