@@ -4,90 +4,57 @@ from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from werkzeug.utils import secure_filename
 from checker.checker_app import checker
-from cscore_service import cscore
+from cscore_service import cscore_service
+from smschecker_service import sms_checker_service
 import zipfile
 import io
 from cscore.cscore_app import cscore_app
+
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
-app.config['UPLOAD_FOLDER_SMS'] = 'checker/input/assign_input'
-app.config['DOWNLOAD_FOLDER_SMS'] = 'checker/output/' 
-app.config['DOWNLOAD_CSCORE'] = 'cscore/output/' 
+app.config['DOWNLOAD_FOLDER_SMS'] = 'checker/output'  
 
 
-class UploadFileForm(FlaskForm):
-    file = FileField("File")
-    submit = SubmitField("Upload File")
-
-table_checker = [
-    { "contract_no": "3250800192489", "mobile_no": "0000000","sms_type":"C4C"},
-    { "contract_no": "1819900360011", "mobile_no": "0000000","sms_type":"H4C"},
-]
-
-folder_mapping = {
-    'acc_current': 'UPLOAD_ACC_CURRENT',
-    'acc_history': 'UPLOAD_ACC_HISTORY',
-    'tdr': 'UPLOAD_TDR',
-    'assign': 'UPLOAD_ASSIGN',
-}
-    
 
 @app.route('/sms-checker', methods=['GET', 'POST'])
 def smschecker():
-    folder_name = 'sms-checker'
-    form = UploadFileForm()
-    download_filename = []  # Variable to hold download filename
-    message = f"---"
+     return sms_checker_service()
+   
 
-    if form.validate_on_submit():
-        file = form.file.data  # Get the uploaded file
-        if file:  # EnFsure the file is valid
-            filename = secure_filename(file.filename)
-            # print('filename',filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER_SMS'], filename)
-            file.save(filepath)
-            checker()  # Run your processing function
-            # print('filename',filename)
+
+
+
+
+
+# @app.route('/multipleupload', methods=['GET', 'POST'])
+# def upload():
+#     folder_name = 'cscore'
+#     form = UploadFileForm()
+#     download_filename = [] 
+#     message = f"-----"
+#     if request.method == 'POST':
+#         for f in request.files.getlist('file_name'):
             
-            # download_filename = filename.replace('.xlsx', '.csv')  # Example conversion
-            download_filename = filename
-            print('download_filename',download_filename)
-            # download_filename.append(filename.replace('.xlsx', '.csv'))
-            message = "File uploaded and processed successfully. You can now download the CSV file."
-           
-    return render_template('checker.html', form=form, download_filename=f'check{download_filename}', message=message, folder_name=folder_name, table=table_checker)
-
-
-
-
-
-
-@app.route('/multipleupload', methods=['GET', 'POST'])
-def upload():
-    folder_name = 'cscore'
-    form = UploadFileForm()
-    download_filename = [] 
-    message = f"-----"
-    if request.method == 'POST':
-        for f in request.files.getlist('file_name'):
-            
-            f.save(os.path.join(app.config['UPLOAD_FOLDER_SMS'],f.filename))
-            message = "File uploaded and processed successfully. You can now download the CSV file."
-        return render_template('upload.html', message=message)
-    return render_template('upload.html', message='Please choose file')
+#             f.save(os.path.join(app.config['UPLOAD_FOLDER_SMS'],f.filename))
+#             message = "File uploaded and processed successfully. You can now download the CSV file."
+#         return render_template('upload.html', message=message)
+#     return render_template('upload.html', message='Please choose file')
 
 
 
 
 @app.route('/cscore', methods=['GET', 'POST'])
 def monthly_cscore():
-    return cscore()  # Call the function and store the result
+    return cscore_service()
 
 
 
 @app.route('/download/<folder>/<filename>')
 def download_file(folder,filename):
     if folder == 'sms-checker':
+            checker() 
             download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_SMS'])  # Default download folder
     else:
         return "Folder not found", 404  # Handle invalid folder name

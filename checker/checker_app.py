@@ -8,7 +8,7 @@ import pandas as pd
 import glob
 import jaydebeapi
 import re
-from const import QUERY, CONNECT
+from const import  CONNECT_TIBERO,QUERY_CUSTOMERINFO,CONNECT_ORACLE
 from datetime import datetime
 
 def clean_column_names(df):
@@ -17,26 +17,20 @@ def clean_column_names(df):
     df.columns = df.columns.str.replace(r' ', '_', regex=True)  
     # df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True) 
     df.columns = df.columns.str.replace(r'loan_no', 'contract_no', regex=True)
-    # df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
+    df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
     # df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  
     return df
 
 def checker() :
-    # Define the input folder
     input_folder = "./checker/input/assign_input/"
 
-
-
-    # Get a list of files in the folder (xlsx or csv)
     files = glob.glob(os.path.join(input_folder, "*.xlsx")) + glob.glob(os.path.join(input_folder, "*.csv"))
-    # Read only the first file found
     if files:
         file_path = files[0]
         if file_path.endswith(".xlsx"):
-            assign = pd.read_excel(file_path,sheet_name='Data', dtype={'mobile_no': str})
-            # print('assignassignassign',assign)
+            assign = pd.read_excel(file_path, dtype={'mobile_no': str})
         elif file_path.endswith(".csv"):
-            assign = pd.read_csv(file_path,sheet_name='Data', dtype={'mobile_no': str})   
+            assign = pd.read_csv(file_path, dtype={'mobile_no': str})   
     else:
         print("No file found in the folder.")
 
@@ -55,18 +49,11 @@ def checker() :
 
     # //////////////////*********************************************/////////////////////************************ #
 
-    # class CONNECT:
-    #     DB = "com.tmax.tibero.jdbc.TbDriver"
-    #     PORT = "jdbc:tibero:thin:@192.169.10.51:18629:DSTFCC"
-    #     # USER = ["natdilok","Kbjparn#3009"]| #user p parn
-    #     USER = ["supat", "coll_sp@2025"]
-    #     CNN = "tibero6-jdbc.jar"
-        
     conn = jaydebeapi.connect(
-            CONNECT.DB,
-            CONNECT.PORT,
-            CONNECT.USER,
-            CONNECT.CNN,
+            CONNECT_TIBERO.DB,
+            CONNECT_TIBERO.PORT,
+            CONNECT_TIBERO.USER,
+            CONNECT_TIBERO.CNN,
             )
     cur = conn.cursor()  
 
@@ -77,7 +64,7 @@ def checker() :
 
     # //////////////////*********************************************/////////////////////************************ #
 
-    # assign_delay = assign_delay.merge(sms_type,left_on='sms_type',right_on = 'sms_type', how='left')
+    assign_delay = assign_delay.merge(sms_type,left_on='sms_type',right_on = 'sms_type', how='left')
     # assign_delay['customer_no'] = assign_delay['customer_no'].astype(str)
     assign_delay['contract_no'] = assign_delay['contract_no'].astype(str)
     customer['contract_no_val'] = customer['contract_no_val'].astype(str)
@@ -117,7 +104,7 @@ def checker() :
 
 
     assign_delay_merge['last4digit_val'] = assign_delay_merge['contract_no'].str[-4:]
-    # assign_delay_merge['sms_wording'] = assign_delay_merge.apply(lambda row: row['sms_wording'].replace("{4digit}", str(row['last4digit_val'])), axis=1)
+    assign_delay_merge['sms_wording'] = assign_delay_merge.apply(lambda row: row['sms_wording'].replace("{4digit}", str(row['last4digit_val'])), axis=1)
 
     # //////////////////*********************************************/////////////////////************************ #
 

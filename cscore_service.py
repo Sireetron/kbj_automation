@@ -19,7 +19,7 @@ class UploadFileForm(FlaskForm):
     file = FileField("File")
     submit = SubmitField("Upload File")
 
-def cscore():
+def cscore_service():
     folder_mapping = {
         'acc_current': 'UPLOAD_ACC_CURRENT',
         'acc_history': 'UPLOAD_ACC_HISTORY',
@@ -43,7 +43,7 @@ def cscore():
             upload_folder = app.config.get(folder_mapping.get(section))  # Default folder
             # print('upload_folder',upload_folder)
             for file in glob.glob(os.path.join(upload_folder, "*")):
-                print('file',file)
+                # print('file',file)
                 os.remove(file)
             files_assign = glob.glob('cscore/input/assign_data/*.xlsx') + glob.glob('cscore/input/assign_data/*.csv')
             for file in files_assign:

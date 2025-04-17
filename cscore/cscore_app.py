@@ -6,7 +6,7 @@ import pandas as pd
 import glob
 # import win32com.client as win32
 import jaydebeapi
-from const import QUERY, CONNECT
+from const import CONNECT_TIBERO
 import re
 import sys
 from datetime import datetime
@@ -59,10 +59,10 @@ def clean_column_names(df):
 
 # ===history digit 1====
 conn = jaydebeapi.connect(
-        CONNECT.DB,
-        CONNECT.PORT,
-        CONNECT.USER,
-        CONNECT.CNN,
+        CONNECT_TIBERO.DB,
+        CONNECT_TIBERO.PORT,
+        CONNECT_TIBERO.USER,
+        CONNECT_TIBERO.CNN,
         )
 cur = conn.cursor() 	
 
