@@ -4,12 +4,12 @@ from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from werkzeug.utils import secure_filename
 from checker.checker_app import checker
-from cscore_service import cscore_service
-from smschecker_service import sms_checker_service
+from service.cscore_service import cscore_service
+from service.smschecker_service import sms_checker_service
 import zipfile
 import io
 from cscore.cscore_app import cscore_app
-
+from const import  CONNECT_ORACLE
 
 
 app = Flask(__name__)
@@ -51,11 +51,14 @@ def monthly_cscore():
 
 
 
+
+
 @app.route('/download/<folder>/<filename>')
 def download_file(folder,filename):
     if folder == 'sms-checker':
             checker() 
             download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_SMS'])  # Default download folder
+            print('download_path',download_path)
     else:
         return "Folder not found", 404  # Handle invalid folder name
     
@@ -64,10 +67,11 @@ def download_file(folder,filename):
 
 
 
-@app.route('/download/<folder_name>')
-def process_and_download_file_cscore(folder_name):
+@app.route('/download/<folder_name>/<path:outputpath>')
+def process_and_download_file_cscore(folder_name,outputpath):
     cscore_app()
-    folder_path = f'./cscore/output'
+
+    folder_path = f'{outputpath}'
     if not os.path.exists(folder_path):
         return "Folder does not exist", 404
 
@@ -78,7 +82,7 @@ def process_and_download_file_cscore(folder_name):
                 file_path = os.path.join(root, file)
                 zipf.write(file_path, os.path.relpath(file_path, folder_path))
 
-    zip_buffer.seek(0)  # Reset buffer position
+    zip_buffer.seek(0)  
     return send_file(zip_buffer, as_attachment=True, download_name=f"{folder_name}.zip", mimetype='application/zip')
 
 

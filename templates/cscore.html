@@ -51,7 +51,7 @@
     <h2>----------------------------------------------------------</h2>
     <p>
         {% if folder_name %}
-        <a href="{{ url_for('process_and_download_file_cscore', folder_name=folder_name) }}">
+        <a href="{{ url_for('process_and_download_file_cscore', folder_name=folder_name, outputpath=outputpath) }}">
             <button>Download All Files</button>
         </a>
         {% endif %}

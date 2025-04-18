@@ -11,7 +11,7 @@ import re
 import sys
 from datetime import datetime
 import os
-
+sys.path.append(os.path.abspath(''))
 
 
 def all_history(query,date,item) :
@@ -57,21 +57,23 @@ def clean_column_names(df):
 
 
 
-# ===history digit 1====
-conn = jaydebeapi.connect(
-        CONNECT_TIBERO.DB,
-        CONNECT_TIBERO.PORT,
-        CONNECT_TIBERO.USER,
-        CONNECT_TIBERO.CNN,
-        )
-cur = conn.cursor() 	
 
-query = pd.read_sql(f'''
-      SELECT * FROM SIREETRON.bucket_score  
-    ''', conn) 
-conn.close()
 
 def cscore_app() :
+    
+    # ===history digit 1====
+    conn = jaydebeapi.connect(
+            CONNECT_TIBERO.DB,
+            CONNECT_TIBERO.PORT,
+            CONNECT_TIBERO.USER,
+            CONNECT_TIBERO.CNN,
+            )
+    cur = conn.cursor() 	
+
+    query = pd.read_sql(f'''
+        SELECT * FROM SIREETRON.bucket_score  
+        ''', conn) 
+    conn.close()
 # =======================ตั้งต้น===================================
 
     file_current = glob.glob("./cscore/input/acc_current/*") 
