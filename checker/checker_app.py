@@ -10,9 +10,12 @@ import jaydebeapi
 import re
 import sys
 from pandas import ExcelWriter
-sys.path.append(os.path.abspath(''))
-from const import  CONNECT_ORACLE
 
+from dotenv import load_dotenv
+load_dotenv() 
+
+
+sys.path.append(os.path.abspath(''))
 
 
     
@@ -29,10 +32,10 @@ def clean_column_names(df):
 
 def checker():
     conn = jaydebeapi.connect(
-        CONNECT_ORACLE.jclassname,
-        CONNECT_ORACLE.url,
-        CONNECT_ORACLE.jars,
-        CONNECT_ORACLE.lib,
+        os.getenv("ORACLE_JCLASSNAME"),
+         os.getenv("ORACLE_URL"),
+         [os.getenv("ORACLE_USER"), os.getenv("ORACLE_PASSWORD")],
+         os.getenv("ORACLE_JARS"),
         )
     cur = conn.cursor() 	
     sms_type = pd.read_sql(f'''
@@ -95,6 +98,7 @@ def checker():
     # //////////////////*********************************************/////////////////////************************
 
 
+
     assign_delay_merge['mobile_check'] = assign_delay_merge.apply(
         lambda row: True if row['mobile_no'] == row['mobile_phone_no_val'] else row['mobile_phone_no_val'],
         axis=1
@@ -111,6 +115,7 @@ def checker():
         lambda row: True if row['4_digit'] == row['last4digit_val']  else row['last4digit_val'],
         axis=1
     ).drop(columns=['last4digit_val'])
+
 
 
     # //////////////////*********************************************/////////////////////************************

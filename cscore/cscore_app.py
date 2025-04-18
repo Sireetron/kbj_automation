@@ -6,12 +6,15 @@ import pandas as pd
 import glob
 # import win32com.client as win32
 import jaydebeapi
-from const import CONNECT_TIBERO
 import re
 import sys
 from datetime import datetime
+from dotenv import load_dotenv
+load_dotenv() 
 import os
 sys.path.append(os.path.abspath(''))
+
+
 
 
 def all_history(query,date,item) :
@@ -63,11 +66,12 @@ def cscore_app() :
     
     # ===history digit 1====
     conn = jaydebeapi.connect(
-            CONNECT_TIBERO.DB,
-            CONNECT_TIBERO.PORT,
-            CONNECT_TIBERO.USER,
-            CONNECT_TIBERO.CNN,
+              os.getenv("TIBERO_JCLASSNAME"),
+         os.getenv("TIBERO_URL"),
+        [os.getenv("TIBEERO_USER"), os.getenv("TIBEERO_PASSWORD")],
+         os.getenv("TIBERO_JARS"),
             )
+    
     cur = conn.cursor() 	
 
     query = pd.read_sql(f'''

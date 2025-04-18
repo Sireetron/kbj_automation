@@ -4,13 +4,6 @@ class QUERY_SMS:
      SELECT * FROM SIREETRON.REF_SMS_WORDING 
     '''
 #connect database
-class CONNECT_TIBERO:
-    DB = "com.tmax.tibero.jdbc.TbDriver"
-    PORT = "jdbc:tibero:thin:@192.169.10.51:18629:DSTFCC"
-    # USER = ["natdilok","Kbjparn#3009"] #user p parn
-    USER = ["supat", "coll_sp@2025"]
-    CNN = "tibero6-jdbc.jar"
-
 
 class QUERY_CUSTOMERINFO:
     query= f'''
@@ -25,13 +18,4 @@ class QUERY_CUSTOMERINFO:
         c.MOBILE_PHONE_NO AS MOBILE_PHONE_NO_val   FROM JFDWH.data_contract dc
         LEFT JOIN JFDWH.CUSTOMER c ON dc.NATIONAL_ID  =c.NATIONAL_ID_NO
     '''
-
-
-class CONNECT_ORACLE:
-    jclassname = "oracle.jdbc.OracleDriver"
-    url = "jdbc:oracle:thin:@10.1.41.100:1622/JFDWH"
-    # driver_args = ["natdilok","Kbjparn#3009"] #user p parn
-    jars = ["supat", "SU#pass005"]
-    lib = "ojdbc17.jar"
-
 

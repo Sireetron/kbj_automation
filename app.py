@@ -9,7 +9,7 @@ from service.smschecker_service import sms_checker_service
 import zipfile
 import io
 from cscore.cscore_app import cscore_app
-from const import  CONNECT_ORACLE
+
 
 
 app = Flask(__name__)
