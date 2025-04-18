@@ -54,9 +54,9 @@ def cscore_service():
                 # print('file',file)
                 if file and file.filename:
                     filename = secure_filename(file.filename)
-                    # output_dir = "./cscore/input/"
-                    # for file in glob.glob(os.path.join(output_dir, "*")):
-                    #     os.remove(file)
+                    output_dir = "./cscore/output/"
+                    for file in glob.glob(os.path.join(output_dir, "*")):
+                        os.remove(file)
                     
                     # print('filename',filename)
                     filepath = os.path.join(upload_folder, filename)

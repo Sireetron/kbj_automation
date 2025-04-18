@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+ <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CSV</title>
+</head>
+
+<body>
+    <h1>OVERDUESTAMP File</h1>
+    <p>
+        {% for msg in messages %}
+            <div>{{ msg }}</div>
+        {% endfor %}
+    </p>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+    
+        <h2>ar</h2>
+        <i>--  (csv)ย้อนหลัง </i>
+        <br></br>
+        <input type="file" name="file_ar" multiple>
+        <button type="submit" name="submit_section" value="ar">Upload ar ย้อนหลัง </button>
+
+
+        <h2>loan target</h2>
+        <i>--  (xlsx) loan ตั้งต้นที่ต้องการ ต้องมี column contract_no</i>
+        <br></br>
+        <input type="file" name="file_loan_target" multiple>
+        <button type="submit" name="submit_section" value="loan_target">Upload  loan target</button>
+
+
+        <h2>start due</h2>
+        <i>--  (xlsx) ไฟล์ตั้งต้น start due</i>
+        <br></br>
+        <input type="file" name="file_startdue" multiple>
+        <button type="submit" name="submit_section" value="startdue">Upload  startdue</button>
+
+
+
+       
+    </form>
+    
+    <p>
+     {% if download_filename %}
+        <a href="{{ url_for('download_file', folder=folder_name, filename=download_filename) }}">
+            <button>Download</button>
+        </a>
+    {% endif %}
+    </p>
+
+
+</body>
+
+</html> 
+

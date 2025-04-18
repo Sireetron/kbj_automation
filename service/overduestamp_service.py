@@ -9,9 +9,10 @@ import glob
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
-app.config['UPLOAD_FOLDER_SMS'] = './checker/input/assign_input'
-app.config['UPLOAD_FOLDER_ACC'] = './checker/input/acc'
-app.config['DOWNLOAD_FOLDER_SMS'] = './checker/output' 
+app.config['UPLOAD_FOLDER_AR'] = './overdue_oa/input/ar'
+app.config['UPLOAD_FOLDER_LOAN_TARGET'] = './overdue_oa/input/loan'
+app.config['DOWNLOAD_FOLDER_STARTDUE'] = './overdue_oa/input/start_due' 
+
 # app.config['DOWNLOAD_CSCORE'] = 'cscore/output/' 
 
 
@@ -19,18 +20,19 @@ class UploadFileForm(FlaskForm):
     file = FileField("File")
     submit = SubmitField("Upload File")
 
-table_checker = [
-    { "contract_no": "3250800192489", "mobile_no": "0812345678","sms_type":"C4C"},
-    { "contract_no": "1819900360011", "mobile_no": "0836654587","sms_type":"H4C"},
-]
+# table_checker = [
+#     { "contract_no": "3250800192489", "mobile_no": "0812345678","sms_type":"C4C"},
+#     { "contract_no": "1819900360011", "mobile_no": "0836654587","sms_type":"H4C"},
+# ]
 
 
-def sms_checker_service():
+def overdue_stamp_service():
     folder_mapping = {
-        'assign_input': 'UPLOAD_FOLDER_SMS',
-        'acc': 'UPLOAD_FOLDER_ACC',
+        'ar': 'UPLOAD_FOLDER_AR',
+        'loan_target': 'UPLOAD_FOLDER_LOAN_TARGET',
+        'startdue':'DOWNLOAD_FOLDER_STARTDUE'
     }
-    folder_name = 'sms-checker'
+    folder_name = 'overduestamp'
     form = UploadFileForm()
     download_filename = []  
     message = f"--------------------------------------------------------------------------------------------"
@@ -70,4 +72,4 @@ def sms_checker_service():
                 # download_filename = saved_files[0] if saved_files else None 
            
         
-    return render_template('checker.html', form=form, download_filename=f'smscheck.xlsx', messages=session.get('messages', []), folder_name=folder_name, table=table_checker)
+    return render_template('overduestamp.html', form=form, download_filename=f'output.xlsx', messages=session.get('messages', []), folder_name=folder_name)
