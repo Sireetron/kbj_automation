@@ -1,5 +1,5 @@
 import pandas as pd
-from cscore.utils import  transform_files
+# from cscore.utils import  transform_files
 import glob
 import numpy as np
 import pandas as pd
@@ -12,53 +12,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv() 
 import os
+from utils import read_file,clean_column_names,all_history,transform_files
 sys.path.append(os.path.abspath(''))
-
-
-
-
-def all_history(query,date,item) :
-    data_mnt = pd.read_csv(f'./cscore/input/acc_history_monthly/{date}')
-    # print(f'./input/history/{date}')
-    data_mnt['Loan No'] = data_mnt['Loan No'].astype(str)
-    data_mnt = data_mnt[['Loan No','OverdueCnt_Morning']].merge(query, left_on='OverdueCnt_Morning', right_on='BUCKET', how='left')
-    data_mnt = data_mnt.rename(columns={'BUCKET_SCORE': f'BUCKET_SCORE{item}mnt'})
-    # print(f'{date}',data_mnt[[f'BUCKET_SCORE{item}mnt','Loan No']])
-    return data_mnt[['Loan No',f'BUCKET_SCORE{item}mnt']]
-
-
-def read_file(pathfile,filename):
-    if filename:
-        if filename.endswith(".xlsx"):
-            file = pd.read_excel(f'{pathfile}{filename}')
-        elif filename.endswith(".csv"):
-            encodings = ["utf-8", "ISO-8859-1", "latin1", "utf-16"]
-            for enc in encodings:
-                try:
-                    file = pd.read_csv(f'{pathfile}{filename}', encoding=enc)
-                    # print(f"Successfully read {filename} using {enc} encoding.")
-                    return file
-                except UnicodeDecodeError:
-                    print(f"Encoding error with {enc}, trying another...")
-            # file = pd.read_csv(f'{pathfile}{filename}', encoding='ISO-8859-1')
-        return file  
-    # print(assign.head())  # Display first few rows
-    else:
-        print("No file found in the folder.")
-    
-    
-    
-def clean_column_names(df):
-    df.columns = df.columns.str.lower()  # Convert to lowercase
-    df.columns = df.columns.str.replace(r'\.', '', regex=True)
-    df.columns = df.columns.str.replace(r' ', '_', regex=True)  # Replace non-alphanumeric characters with underscores
-    df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True)  # Replace variations with 'customer_no'
-    df.columns = df.columns.str.replace(r'loan_no', 'contract_no', regex=True)
-    df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
-    df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  # Replace 'customer_name/surname(thai)' with 'customer_name'
-    return df    
-
-
 
 
 
@@ -66,17 +21,53 @@ def cscore_app() :
     
     # ===history digit 1====
     conn = jaydebeapi.connect(
-              os.getenv("TIBERO_JCLASSNAME"),
-         os.getenv("TIBERO_URL"),
-        [os.getenv("TIBEERO_USER"), os.getenv("TIBEERO_PASSWORD")],
-         os.getenv("TIBERO_JARS"),
-            )
+        os.getenv("ORACLE_JCLASSNAME"),
+         os.getenv("ORACLE_URL"),
+         [os.getenv("ORACLE_USER"), os.getenv("ORACLE_PASSWORD")],
+         os.getenv("ORACLE_JARS"),
+        )
     
     cur = conn.cursor() 	
 
     query = pd.read_sql(f'''
-        SELECT * FROM SIREETRON.bucket_score  
+        SELECT * FROM supat.bucket_score  
         ''', conn) 
+    print('query',query)
+    data_performance = pd.read_sql(f'''
+       WITH contract AS (
+        SELECT AS_OF_DATE ,CONTRACT_NO ,NATIONAL_ID ,CONTRACT_DATE ,PRINCIPAL_BAL 
+        FROM JFDWH.CONTRACT_INFO_DAILY 
+        WHERE AS_OF_DATE = (SELECT MAX(AS_OF_DATE) FROM JFDWH.CONTRACT_INFO_DAILY)-1
+        OFFSET 5 ROWS FETCH NEXT 100 ROWS ONLY
+        )
+        ,
+        rawdata AS (
+        SELECT c.*,c2.NAME ,c2.SURNAME ,c2.GROSS_INCOME ,c2.DATE_OF_BIRTH ,c2.BUSINESS_TYPE ,c2.OCCUPATION_TYPE,ro.OCCUPATION_NAME  FROM contract c
+        LEFT JOIN JFDWH.CUSTOMER c2 ON c2.NATIONAL_ID_NO = c.NATIONAL_ID
+        LEFT JOIN REF_OCCUPATION ro ON c2.OCCUPATION_TYPE = ro.ID 
+        )
+        ,
+        data AS (
+        SELECT tcc.AS_OF_DATE,tcc.CONTRACT_NO ,tcc.NATIONAL_ID ,tcc.GROSS_INCOME ,
+        tcc.OCCUPATION_TYPE ,tcc.OCCUPATION_NAME,
+        tcc.CONTRACT_DATE ,floor(MONTHS_BETWEEN(SYSDATE, tcc.CONTRACT_DATE))  AS contract_period,
+        FLOOR(MONTHS_BETWEEN(SYSDATE, tcc.DATE_OF_BIRTH) / 12) AS age,
+        PRINCIPAL_BAL ,
+        CASE WHEN floor(MONTHS_BETWEEN(SYSDATE, tcc.CONTRACT_DATE))  < 7 THEN 6 ELSE 7 END AS MOB,
+        CAST(COALESCE(tis.INDEX_SCORE , '1') AS NUMBER) AS digit2income,
+            CAST(COALESCE(tas.INDEX_SCORE, '3') AS NUMBER) AS digit2age,
+            CAST(COALESCE(tos.INDEX_SCORE, '3') AS NUMBER) AS digit2job
+        FROM rawdata tcc 
+        LEFT JOIN TEMP_AGE_SCORE tas ON tas.AGE = FLOOR(MONTHS_BETWEEN(SYSDATE, tcc.DATE_OF_BIRTH) / 12) 
+        LEFT JOIN TEMP_OCCUPATION_SCORE tos ON tos.OCCUPATION_TYPE  = tcc.OCCUPATION_TYPE
+        LEFT JOIN Temp_INCOME_SCORE tis ON tis.INCOME = tcc.GROSS_INCOME
+        )
+        SELECT t2.*,
+        t3.INDEX_SCORE AS TOTAL_DIGIT2
+        FROM  data t2
+        LEFT JOIN TEMP_DIGIT2_SCORE t3 ON t2.digit2income + t2.digit2age + t2.digit2job = t3.SUMDIGIT  
+        ''', conn) 
+    print(data_performance)
     conn.close()
 # =======================ตั้งต้น===================================
 
@@ -109,14 +100,14 @@ def cscore_app() :
     for i in his[0:]:
         # print(f"Processing date: {i[0]}")
         # print((i[0], i[1]))
-        data = all_history(query,i[0], i[1])
+        data = all_history('./cscore/input/acc_history_monthly/',query,i[0], i[1])
         data = clean_column_names(data)
         data_digit1 = data_digit1.merge(data, on='contract_no', how='left')
         
         
         
     # performane digit2
-    data_performance = pd.read_csv('./cscore/input/performance_peronal_info/performance.csv')
+    # data_performance = pd.read_csv('./cscore/input/performance_peronal_info/performance.csv')
     data_performance = clean_column_names(data_performance)
     # ==============================================================================================================================
 

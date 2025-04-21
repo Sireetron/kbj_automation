@@ -10,25 +10,14 @@ import jaydebeapi
 import re
 import sys
 from pandas import ExcelWriter
+from utils import read_file,clean_column_names
+
 
 from dotenv import load_dotenv
 load_dotenv() 
 
 
 sys.path.append(os.path.abspath(''))
-
-
-    
-    
-def clean_column_names(df):
-    df.columns = df.columns.str.lower()  
-    df.columns = df.columns.str.replace(r'\.', '', regex=True)
-    df.columns = df.columns.str.replace(r' ', '_', regex=True)  
-    df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True) 
-    df.columns = df.columns.str.replace(r'loan_no|loan', 'contract_no', regex=True)
-    df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
-    df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  
-    return df
 
 def checker():
     conn = jaydebeapi.connect(
@@ -48,7 +37,7 @@ def checker():
         , cid.NATIONAL_ID AS NATIONAL_ID  ,cid.MONTHLY_INST_AMT ,cid.FIRST_DUE_DATE 
         FROM jfdwh.CONTRACT_INFO_DAILY cid 
         WHERE AS_OF_DATE =  (SELECT MAX(AS_OF_DATE) FROM JFDWH.CONTRACT_INFO_DAILY) -1
-         OFFSET 5 ROWS FETCH NEXT 100 ROWS ONLY
+         OFFSET 5 ROWS FETCH NEXT 10000 ROWS ONLY
         )
         SELECT dc.*,
         c.MOBILE_PHONE_NO AS MOBILE_PHONE_NO_val   FROM JFDWH.data_contract dc
@@ -66,10 +55,10 @@ def checker():
     if files:
         file_path = files[0]
         if file_path.endswith(".xlsx"):
-            assign = pd.read_excel(file_path,sheet_name='Data', dtype={'MobileNo': str})
+            assign = pd.read_excel(file_path,sheet_name='Data', dtype={'mobile_no': str})
             # print('assignassignassign',assign)
         elif file_path.endswith(".csv"):
-            assign = pd.read_csv(file_path,sheet_name='Data', dtype={'MobileNo': str})   
+            assign = pd.read_csv(file_path,sheet_name='Data', dtype={'mobile_no': str})   
     else:
         print("No file found in the folder.")
 
@@ -89,6 +78,7 @@ def checker():
 
 
     # //////////////////*********************************************/////////////////////************************
+    
     assign_delay = clean_column_names(assign)
     assign_delay = assign_delay.merge(sms_type,left_on='sms_type',right_on = 'sms_type', how='left')
     assign_delay['contract_no'] = assign_delay['contract_no'].astype(str)
@@ -119,17 +109,21 @@ def checker():
 
 
     # //////////////////*********************************************/////////////////////************************
-    ar_file = pd.read_csv('./checker/input/acc/Acc_20250417_0830.csv')
-    ar_file['Loan No'] = ar_file['Loan No'].astype(str)
-    ar_file =ar_file[['Loan No','OverdueSumAmt']]
-    assign_delay_merge = assign_delay_merge.merge(ar_file,left_on='contract_no',right_on="Loan No",how='left').drop(columns=['Loan No'])
+    file_current = glob.glob("./checker/input/acc/*") 
+    file_current = file_current[0].split('\\')[1]
+    ar_file = read_file('./checker/input/acc/',file_current)
+    ar_file.columns = ar_file.columns.str.lower()
+    # ar_file = pd.read_csv('./checker/input/acc/Acc_20250417_0830.csv')
+    ar_file['loan no'] = ar_file['loan no'].astype(str)
+    ar_file =ar_file[['loan no','overduesumamt']]
+    assign_delay_merge = assign_delay_merge.merge(ar_file,left_on='contract_no',right_on="loan no",how='left').drop(columns=['loan no'])
 
     # //////////////////*********************************************/////////////////////************************
 
 
 
     assign_delay_merge['sms_wording'] =assign_delay_merge.apply(
-        lambda row: row['sms_wording'].replace("{totalunpaidbalance}", str(row['OverdueSumAmt']))
+        lambda row: row['sms_wording'].replace("{totalunpaidbalance}", str(row['overduesumamt']))
         if "{totalunpaidbalance}" in row['sms_wording'] else row['sms_wording'],
         axis=1
     )
