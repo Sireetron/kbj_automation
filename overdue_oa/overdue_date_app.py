@@ -2,16 +2,30 @@ import pandas as pd
 import glob
 import re
 from datetime import datetime, timedelta
-
+from utils import read_file,transform_files,clean_column_names,all_history
 
 
 
 def overdue_date_app():
-    df = pd.read_excel('./overdue_oa/input/loan/save_04042568.xlsx')
     
-    start = pd.read_excel('./overdue_oa/input/start_due/start_due.xlsx')
-    df = df.merge(start,left_on='loan_no',right_on='Loan No.',how='left')[['loan_no','Overdue days(Morning)']]
-    csv_files =glob.glob("./overdue_oa/input/ar/*.csv")
+    
+    file_current = glob.glob("./overdue_oa/input/loan/*") 
+    file_current = file_current[0].split('\\')[1]
+    loan = read_file('./overdue_oa/input/loan/',file_current)
+    loan = clean_column_names(loan)
+    
+    # loan = pd.read_excel('./overdue_oa/input/loan/save_04042568.xlsx')
+    file_current_start = glob.glob("./overdue_oa/input/start_due/*") 
+    file_current_start = file_current_start[0].split('\\')[1]
+    start = read_file('./overdue_oa/input/start_due/',file_current_start)
+    start = clean_column_names(start)
+    # start = pd.read_excel('./overdue_oa/input/start_due/start_due.xlsx')
+    
+    
+    
+    df = loan.merge(start,on='contract_no',how='left')[['contract_no','overdue_days(morning)']]
+    
+    acc =glob.glob("./overdue_oa/input/acc/*.csv")
 
     def transform_files(files):
         files.sort(reverse=True)
@@ -19,7 +33,7 @@ def overdue_date_app():
         return [[file,  re.sub(r'\.csv$', '', file)] for file in latest_files]
 
     def all_history(path,item) :
-        data_mnt = pd.read_csv(f'./overdue_oa/input/ar/{path}')
+        data_mnt = pd.read_csv(f'./overdue_oa/input/acc/{path}')
         # print(f'./input/history/{date}')
         data_mnt['Loan No'] = data_mnt['Loan No'].astype(str)
         data_mnt = data_mnt[['Loan No','OverdueDays_Morning']]
@@ -41,7 +55,7 @@ def overdue_date_app():
 
 
     processed_files = []  # Store modified file names
-    for i in csv_files:
+    for i in acc:
         # print()
         file = i.split('\\')[-1] 
         # print(file)
@@ -54,7 +68,7 @@ def overdue_date_app():
     # for item in sorted_data:
     #     print(item)
         
-    df['loan_no'] = df['loan_no'].astype(str)
+    df['contract_no'] = df['contract_no'].astype(str)
 
 
     for i in sorted_data[0:]:
@@ -62,11 +76,11 @@ def overdue_date_app():
         print((i[0], i[1]))
         data = all_history(i[0], i[1])
         # data = clean_column_names(data)
-        df = df.merge(data, left_on='loan_no',right_on = 'Loan No', how='left')
+        df = df.merge(data, left_on='contract_no',right_on = 'Loan No', how='left')
         df.drop(columns=['Loan No'], inplace=True)
         
     date_cols = df.columns[1:] 
-    print('df',df)
+    # print('df',df)
 
     df["insertdate"] = df.apply(find_stamp_date, axis=1)
     df["insertdate"] = df['insertdate'].apply(

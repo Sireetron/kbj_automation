@@ -32,7 +32,7 @@ def cscore_app() :
     query = pd.read_sql(f'''
         SELECT * FROM supat.bucket_score  
         ''', conn) 
-    print('query',query)
+    # print('query',query)
     data_performance = pd.read_sql(f'''
        WITH contract AS (
         SELECT AS_OF_DATE ,CONTRACT_NO ,NATIONAL_ID ,CONTRACT_DATE ,PRINCIPAL_BAL 
@@ -67,7 +67,7 @@ def cscore_app() :
         FROM  data t2
         LEFT JOIN TEMP_DIGIT2_SCORE t3 ON t2.digit2income + t2.digit2age + t2.digit2job = t3.SUMDIGIT  
         ''', conn) 
-    print(data_performance)
+    # print(data_performance)
     conn.close()
 # =======================ตั้งต้น===================================
 

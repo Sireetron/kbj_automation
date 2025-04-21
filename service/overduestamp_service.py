@@ -9,21 +9,15 @@ import glob
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
-app.config['UPLOAD_FOLDER_AR'] = './overdue_oa/input/ar'
+app.config['UPLOAD_FOLDER_AR'] = './overdue_oa/input/acc'
 app.config['UPLOAD_FOLDER_LOAN_TARGET'] = './overdue_oa/input/loan'
 app.config['DOWNLOAD_FOLDER_STARTDUE'] = './overdue_oa/input/start_due' 
-
-# app.config['DOWNLOAD_CSCORE'] = 'cscore/output/' 
+ 
 
 
 class UploadFileForm(FlaskForm):
     file = FileField("File")
     submit = SubmitField("Upload File")
-
-# table_checker = [
-#     { "contract_no": "3250800192489", "mobile_no": "0812345678","sms_type":"C4C"},
-#     { "contract_no": "1819900360011", "mobile_no": "0836654587","sms_type":"H4C"},
-# ]
 
 
 def overdue_stamp_service():
@@ -32,32 +26,24 @@ def overdue_stamp_service():
         'loan_target': 'UPLOAD_FOLDER_LOAN_TARGET',
         'startdue':'DOWNLOAD_FOLDER_STARTDUE'
     }
-    folder_name = 'overduestamp'
+    folder_name = 'overdue-stamp'
     form = UploadFileForm()
-    download_filename = []  
-    message = f"--------------------------------------------------------------------------------------------"
-    
+
     if 'messages' not in session:
             session['messages'] = []  
             
     if form.validate_on_submit():
-        section = request.form.get("submit_section")  # Get which button was pressed
-        files = request.files.getlist(f"file_{section}")  # Get files based on section
-        # print('section',section)
-        # print('files',files)
+        section = request.form.get("submit_section")  
+        files = request.files.getlist(f"file_{section}")  
         if section and files:
-                upload_folder = app.config.get(folder_mapping.get(section))  # Default folder
-                # print('upload_folder',upload_folder)
+                upload_folder = app.config.get(folder_mapping.get(section))  
                 for file in glob.glob(os.path.join(upload_folder, "*")):
                     os.remove(file)
-                # files_assign = glob.glob('cscore/input/assign_data/*.xlsx') + glob.glob('cscore/input/assign_data/*.csv')
-                # for file in files_assign:
-                #     os.remove(file)
+
                     
                     
                 saved_files = []
                 for file in files:
-                    # print('file',file)
                     if file and file.filename:
                         filename = secure_filename(file.filename)
                         filepath = os.path.join(upload_folder, filename)
@@ -65,11 +51,11 @@ def overdue_stamp_service():
                         saved_files.append(filename)
                 if saved_files:
                     message = f"Files uploaded to {section} successfully: {', '.join(saved_files)}"
-                    session['messages'].append(message)  # Append message to session
+                    session['messages'].append(message) 
                 else:
                     session['messages'].append(f"No valid files uploaded to {section}.")
 
-                # download_filename = saved_files[0] if saved_files else None 
+                
            
         
     return render_template('overduestamp.html', form=form, download_filename=f'output.xlsx', messages=session.get('messages', []), folder_name=folder_name)

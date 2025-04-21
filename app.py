@@ -38,18 +38,17 @@ def overdue_stamp():
 
 
 @app.route('/download/<folder>/<filename>')
+# folder name is path ที่ตั้ง ไว้ใส่เงื่อไขเวลาเรียก api  filemname คือ outputnaame 
 def download_file(folder,filename):
     if folder == 'sms-checker':
             checker() 
-            download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_SMS'])  # Default download folder
-            # print('download_path',download_path)
-    elif folder == 'overduestamp':
+            download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_SMS']) 
+    elif folder == 'overdue-stamp':
             overdue_date_app() 
-            download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_OVERDUESTAMP'])  # Default download folder
-            # print('download_path',download_path)
+            download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_OVERDUESTAMP']) 
         
     else:
-        return "Folder not found", 404  # Handle invalid folder name
+        return "Folder not found", 404  
     
     return send_from_directory(download_path, filename, as_attachment=True)
 
@@ -64,7 +63,7 @@ def process_and_download_file_cscore(folder_name,outputpath):
     if not os.path.exists(folder_path):
         return "Folder does not exist", 404
 
-    zip_buffer = io.BytesIO()  # Create an in-memory zip file
+    zip_buffer = io.BytesIO()  
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(folder_path):
             for file in files:
