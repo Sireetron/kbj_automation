@@ -7,7 +7,9 @@
 </head>
 
 <body>
-    <h1>OVERDUESTAMP File</h1>
+    <h1>OVERDUESTAMP File </h1>
+    <body>ใช้สำหรับ CHECK ว่าลูกค่าจ่ายครบวันไหน โดยprocess จะ stamp วันแรกที่ overdueday ลดลง </body>
+
     <p>
         {% for msg in messages %}
             <div>{{ msg }}</div>
@@ -18,21 +20,21 @@
         {{ form.hidden_tag() }}
     
         <h2>acc</h2>
-        <i>--  (csv)ย้อนหลัง ให้ original file</i>
+        <i>--  (csv)ย้อนหลัง ให้ original file ย้อนหลังทั้งหมดที่ต้องการ หรือทั้งหมดตั้งแต่ ACC วันที่ 3-31 ของเดือน</i>
         <br></br>
         <input type="file" name="file_ar" multiple>
-        <button type="submit" name="submit_section" value="ar">Upload acc ย้อนหลัง </button>
+        <button type="submit" name="submit_section" value="ar">Upload acc  </button>
 
 
-        <h2>loan target</h2>
-        <i>--  (xlsx) loan ตั้งต้นที่ต้องการ ::::column ต้องเป็น  contract_no</i>
+        <h2>loan </h2>
+        <i>--  (xlsx) loan ตั้งต้นที่ต้องการ ให้ stamp  ::::column ต้องเป็น  contract_no</i>
         <br></br>
         <input type="file" name="file_loan_target" multiple>
-        <button type="submit" name="submit_section" value="loan_target">Upload  loan target</button>
+        <button type="submit" name="submit_section" value="loan_target">Upload  loan</button>
 
 
         <h2>start due</h2>
-        <i>--  (xlsx) ไฟล์ตั้งต้น start due ::::column ต้องเป็น  overdue_days(morning) , contract_no</i>
+        <i>--  (xlsx) ไฟล์ตั้งต้น ใช้ไฟล์ต้องการใช้เป็น overdueday ตั้งต้น  ::::column ต้องมี  overdue_days(morning) , contract_no</i>
         <br></br>
         <input type="file" name="file_startdue" multiple>
         <button type="submit" name="submit_section" value="startdue">Upload  startdue</button>
@@ -41,7 +43,7 @@
 
        
     </form>
-    
+    <br></br>
     <p>
      {% if download_filename %}
         <a href="{{ url_for('download_file', folder=folder_name, filename=download_filename) }}">

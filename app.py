@@ -1,37 +1,42 @@
 from flask import Flask, render_template, request, send_from_directory,send_file, session
 import os
-from flask_wtf import FlaskForm
-from wtforms import FileField, SubmitField
-from werkzeug.utils import secure_filename
+# from flask_wtf import FlaskForm
+# from wtforms import FileField, SubmitField
+# from werkzeug.utils import secure_filename
 from checker.checker_app import checker
 from checker.checker_app import checker
 from service.cscore_service import cscore_service
 from service.smschecker_service import sms_checker_service
 from service.overduestamp_service import overdue_stamp_service
+from service.costivr_service import costivr_service
 import zipfile
 import io
 from cscore.cscore_app import cscore_app
 from overdue_oa.overdue_date_app import overdue_date_app
-
+from costivr.costivr_app import costivr
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
 app.config['DOWNLOAD_FOLDER_SMS'] = 'checker/output'  
 app.config['DOWNLOAD_FOLDER_OVERDUESTAMP'] = 'overdue_oa/output'  
-
+app.config['DOWNLOAD_FOLDER_COST_IVR'] = 'costivr/output'  
 
 @app.route('/sms-checker', methods=['GET', 'POST'])
-def smschecker():
+def upload_smschecker():
      return sms_checker_service()
    
 
 @app.route('/cscore', methods=['GET', 'POST'])
-def monthly_cscore():
+def upload_monthly_cscore():
     return cscore_service()
 
 @app.route('/overdue-stamp', methods=['GET', 'POST'])
-def overdue_stamp():
+def upload_overdue_stamp():
     return overdue_stamp_service()
+
+@app.route('/costivr', methods=['GET', 'POST'])
+def upload_costivr():
+    return costivr_service()
 
 
 
@@ -46,7 +51,9 @@ def download_file(folder,filename):
     elif folder == 'overdue-stamp':
             overdue_date_app() 
             download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_OVERDUESTAMP']) 
-        
+    elif folder == 'costivr':
+            costivr() 
+            download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_COST_IVR']) 
     else:
         return "Folder not found", 404  
     

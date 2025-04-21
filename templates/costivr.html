@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+ <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+</head>
+
+<body>
+    <h1>COST_IVR File </h1>
+    <body>ใช้สำหรับ คำนวณ Cost จากการใช้ IVR  </body>
+
+    <h3>Files in Folder:</h3>
+        <ul>
+        {% for filename in file_list %}
+            <li>{{ filename }}</li>
+        {% else %}
+            <li>No files found.</li>
+        {% endfor %}
+        </ul>
+
+
+
+    <p>
+        {% for msg in messages %}
+            <div>{{ msg }}</div>
+        {% endfor %}
+    </p>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+    
+   
+        <i>--  (csv)เลือกไฟล์เพิ่มเติม ทั้งหมด ดึงมาจากivr ระบบจะทำสรุปรายเดือนให้</i>
+        <br></br>
+        <input type="file" name="file_costivr" multiple>
+        <button type="submit" name="submit_section" value="costivr">Upload IVR  </button>
+       
+    </form>
+    <br></br>
+    <p>
+     {% if download_filename %}
+        <a href="{{ url_for('download_file', folder=folder_name, filename=download_filename) }}">
+            <button>Download</button>
+        </a>
+    {% endif %}
+    </p>
+
+
+</body>
+
+</html> 
+
