@@ -82,6 +82,8 @@ def checker():
         if 'conn_oracle' in locals():
             conn_oracle.close()
     
+    
+    
     input_folder = "./checker/input/assign_input/"
     files = glob.glob(os.path.join(input_folder, "*.xlsx")) + glob.glob(os.path.join(input_folder, "*.csv"))
     # print('files',files)
