@@ -1,6 +1,6 @@
-*.xlsx
-*.csv
+**/*.xlsx
+**/*.csv
 *.env
 *.jar
-*.ipynb
-*.xlsm
+**/*.ipynb
+**/*.xlsm
