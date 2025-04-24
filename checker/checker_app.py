@@ -48,7 +48,7 @@ def checker():
         )
         sms_type = pd.read_sql("SELECT * FROM SUPAT.REF_SMS_WORDING", conn_oracle)
         # print("Oracle SMS Type Query Result:")
-        # print(sms_type)
+        print(sms_type)
     
         today_str = datetime.today().strftime('%Y-%m-%d')
         print('today_str',today_str)
@@ -64,21 +64,9 @@ def checker():
             })
         else:
             print("Querying database...")
-            customer = pd.read_sql(f'''
-                WITH data_contract AS (
-                    SELECT cid.AS_OF_DATE,
-                        cid.CONTRACT_NO AS CONTRACT_NO_VAL,
-                        cid.NATIONAL_ID,
-                        cid.MONTHLY_INST_AMT,
-                        cid.FIRST_DUE_DATE 
-                    FROM jfdwh.CONTRACT_INFO_DAILY cid 
-                    WHERE AS_OF_DATE = (SELECT MAX(AS_OF_DATE) FROM JFDWH.CONTRACT_INFO_DAILY)
-                )
-                SELECT dc.*, 
-                    c.MOBILE_PHONE_NO AS MOBILE_PHONE_NO_VAL
-                FROM data_contract dc
-                LEFT JOIN JFDWH.CUSTOMER c ON dc.NATIONAL_ID = c.NATIONAL_ID_NO
-            ''', conn_oracle, dtype={
+            customer = pd.read_sql(
+              'SELECT * FROM SUPAT."customer_current"'
+            , conn_oracle, dtype={
                 'MOBILE_PHONE_NO_VAL': str,
                 'NATIONAL_ID': str,
                 'CONTRACT_NO_VAL': str
@@ -87,7 +75,7 @@ def checker():
             # Save to CSV
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             customer.to_csv(csv_path, index=False)
-            # print('customer',customer)
+            print('customer',customer)
     except Exception as e:
         print("Error connecting to Oracle:", e)
     finally:
