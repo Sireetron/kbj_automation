@@ -11,7 +11,8 @@ import re
 import sys
 from pandas import ExcelWriter
 from utils import read_file,clean_column_names
-from datetime import datetime
+from datetime import datetime, timedelta,date
+import oracledb
 
 from dotenv import load_dotenv
 load_dotenv() 
@@ -40,12 +41,20 @@ def checker():
     
     
     try:
-        conn_oracle = jaydebeapi.connect(
-            os.getenv("ORACLE_JCLASSNAME"),
-            os.getenv("ORACLE_URL"),
-            [os.getenv("ORACLE_USER"), os.getenv("ORACLE_PASSWORD")],
-            os.getenv("ORACLE_JARS")
-        )
+        conn_oracle = oracledb.connect(
+                        user=os.getenv("ORACLE_USER"),
+                        password=os.getenv("ORACLE_PASSWORD"),
+                        dsn=os.getenv("DSN"),
+                        mode=oracledb.DEFAULT_AUTH
+                    )
+        cursor = conn_oracle.cursor()
+        
+        # jaydebeapi.connect(
+        #     os.getenv("ORACLE_JCLASSNAME"),
+        #     os.getenv("ORACLE_URL"),
+        #     [os.getenv("ORACLE_USER"), os.getenv("ORACLE_PASSWORD")],
+        #     os.getenv("ORACLE_JARS")
+        # )
         sms_type = pd.read_sql("SELECT * FROM SUPAT.REF_SMS_WORDING", conn_oracle)
         # print("Oracle SMS Type Query Result:")
         print(sms_type)
@@ -80,6 +89,7 @@ def checker():
         print("Error connecting to Oracle:", e)
     finally:
         if 'conn_oracle' in locals():
+            cursor.close()
             conn_oracle.close()
     
     
@@ -118,7 +128,9 @@ def checker():
     assign_delay = assign_delay.merge(sms_type,left_on='sms_type',right_on = 'sms_type', how='left')
     assign_delay['contract_no'] = assign_delay['contract_no'].astype(str)
     customer['contract_no_val'] = customer['contract_no_val'].astype(str)
+    customer['monthly_inst_amt_val'] = customer['monthly_inst_amt_val'].apply(lambda x: int(x) if pd.notna(x) else pd.NA).astype('Int64')
     assign_delay_merge = assign_delay.merge(customer, left_on= 'contract_no', right_on='contract_no_val', how='left')
+    
 
     # //////////////////*********************************************/////////////////////************************
 
@@ -134,13 +146,46 @@ def checker():
         if "{4digit}" in row['sms_wording'] else row['sms_wording'],
         axis=1
     )
-    assign_delay_merge['4_digit'] = assign_delay_merge['4_digit'].astype(str)
-    assign_delay_merge['last4digit_val'] = assign_delay_merge['last4digit_val'].astype(str)
-    assign_delay_merge['4digit_check'] = assign_delay_merge.apply(
-        lambda row: True if row['4_digit'] == row['last4digit_val']  else row['last4digit_val'],
+    assign_delay_merge['sms_wording'] =  assign_delay_merge.apply(
+        lambda row: row['sms_wording'].replace("{monthly_inst}", str(row['monthly_inst_amt_val']))
+        if "{monthly_inst}" in row['sms_wording'] else row['sms_wording'],
         axis=1
     )
-    assign_delay_merge = assign_delay_merge.drop(columns=['last4digit_val'])
+    
+    today = date.today()
+    first_this_month = today.replace(day=1)
+    next_month = first_this_month + timedelta(days=32)
+    payment_date_due = next_month.replace(day=1)
+    # print('payment_date_due',payment_date_due)
+    
+    assign_delay_merge['sms_wording'] =  assign_delay_merge.apply(
+    lambda row: row['sms_wording'].replace("{paymentdatedue}", str(payment_date_due))
+    if "{paymentdatedue}" in row['sms_wording'] else row['sms_wording'],
+    axis=1
+    )
+    
+    
+    # assign_delay_merge['4_digit'] = assign_delay_merge['4_digit'].astype(str)
+    # assign_delay_merge['last4digit_val'] = assign_delay_merge['last4digit_val'].astype(str)
+    # assign_delay_merge['4digit_check'] = assign_delay_merge.apply(
+    #     lambda row: True if row['4_digit'] == row['last4digit_val']  else row['last4digit_val'],
+    #     axis=1
+    # )
+    
+    if '4_digit' in assign_delay_merge.columns :
+        assign_delay_merge['4_digit'] = assign_delay_merge['4_digit'].astype(str)
+        assign_delay_merge['last4digit_val'] = assign_delay_merge['last4digit_val'].astype(str)
+
+        assign_delay_merge['4digit_check'] = assign_delay_merge.apply(
+            lambda row: True if row['4_digit'] == row['last4digit_val'] else row['last4digit_val'],
+            axis=1
+        )
+    else:
+        print("One or both of the required columns ('4_digit', 'last4digit_val') are missing.")
+
+    
+    
+    # assign_delay_merge = assign_delay_merge.drop(columns=['last4digit_val'])
 
 
 
@@ -155,6 +200,13 @@ def checker():
     assign_delay_merge = assign_delay_merge.merge(ar_file,left_on='contract_no',right_on="loan no",how='left').drop(columns=['loan no'])
 
     # //////////////////*********************************************/////////////////////************************
+    
+    if 'ar_today' in assign_delay_merge.columns:
+        assign_delay_merge['sumamt_check'] = assign_delay_merge.apply(
+        lambda row: True if row['ar_today'] == row['overduesumamt']  else row['overduesumamt'],
+        axis=1)
+    else:
+        print(" missing.")
 
 
 

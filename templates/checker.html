@@ -18,7 +18,12 @@
         {{ form.hidden_tag() }}
     
         <h2>filecheck</h2>
-        <i>--  (xlsx)ใช้ file sheetname ต้องชื่อ Data, ต้องมี contract_no , mobile_no, 4_digit,sms_type(ชื่อ sms_type ต้องตรงtypeใน databaseเป้ะๆ ดูได้ที่ Oracle) </i>
+        <i>--  (xlsx)ใช้ file sheetname ต้องชื่อ Data, ชื่อ column  (พิมเล็กพิมใหญ่มีผล) ต้องมี <br/>
+            contract_no , <br/>
+            mobile_no, <br/>
+            4_digit (ไม่ต้องมีก็ได้), <br/>
+            sms_type(ชื่อ sms_type ต้องตรงtypeใน databaseเป้ะๆ ดูได้ที่ Oracle) <br/>
+            ,ar_today(ไม่ต้องมีก็ได้) <br/> </i>
         <br></br>
         <input type="file" name="file_assign_input" multiple>
         <button type="submit" name="submit_section" value="assign_input">Upload sms file </button>
@@ -27,7 +32,7 @@
 
 
         <h2>Acc</h2>
-        <i>--  (csv)ใช้ ACC ล่าสุด original </i>
+        <i>--  (csv)ใช้ ACC ล่าสุด original ไม่ต้องเปลี่ยนอะไรทั้งนั้น </i>
         <br></br>
         <input type="file" name="file_acc" multiple>
         <button type="submit" name="submit_section" value="acc">Upload  ACC</button>

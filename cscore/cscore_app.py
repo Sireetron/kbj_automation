@@ -12,6 +12,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv() 
 import os
+import oracledb
 from utils import read_file,clean_column_names,all_history,transform_files
 sys.path.append(os.path.abspath(''))
 
@@ -20,55 +21,36 @@ sys.path.append(os.path.abspath(''))
 def cscore_app() :
     
     # ===history digit 1====
-    conn = jaydebeapi.connect(
-        os.getenv("ORACLE_JCLASSNAME"),
-         os.getenv("ORACLE_URL"),
-         [os.getenv("ORACLE_USER"), os.getenv("ORACLE_PASSWORD")],
-         os.getenv("ORACLE_JARS"),
-        )
+    conn = oracledb.connect(
+        user=os.getenv("ORACLE_USER"),
+        password=os.getenv("ORACLE_PASSWORD"),
+        dsn=os.getenv("DSN"),
+        mode=oracledb.DEFAULT_AUTH
+    )
+    cursor = conn.cursor()
     
-    cur = conn.cursor() 	
+    # jaydebeapi.connect(
+    #     os.getenv("ORACLE_JCLASSNAME"),
+    #      os.getenv("ORACLE_URL"),
+    #      [os.getenv("ORACLE_USER"), os.getenv("ORACLE_PASSWORD")],
+    #      os.getenv("ORACLE_JARS"),
+    #     )
+    
+    # cur = conn.cursor() 	
+    
 
     query = pd.read_sql(f'''
         SELECT * FROM supat.bucket_score  
         ''', conn) 
     # print('query',query)
     data_performance = pd.read_sql(f'''
-       WITH contract AS (
-        SELECT AS_OF_DATE ,CONTRACT_NO ,NATIONAL_ID ,CONTRACT_DATE ,PRINCIPAL_BAL 
-        FROM JFDWH.CONTRACT_INFO_DAILY 
-        WHERE AS_OF_DATE = (SELECT MAX(AS_OF_DATE) FROM JFDWH.CONTRACT_INFO_DAILY)-1
-        OFFSET 5 ROWS FETCH NEXT 100 ROWS ONLY
-        )
-        ,
-        rawdata AS (
-        SELECT c.*,c2.NAME ,c2.SURNAME ,c2.GROSS_INCOME ,c2.DATE_OF_BIRTH ,c2.BUSINESS_TYPE ,c2.OCCUPATION_TYPE,ro.OCCUPATION_NAME  FROM contract c
-        LEFT JOIN JFDWH.CUSTOMER c2 ON c2.NATIONAL_ID_NO = c.NATIONAL_ID
-        LEFT JOIN REF_OCCUPATION ro ON c2.OCCUPATION_TYPE = ro.ID 
-        )
-        ,
-        data AS (
-        SELECT tcc.AS_OF_DATE,tcc.CONTRACT_NO ,tcc.NATIONAL_ID ,tcc.GROSS_INCOME ,
-        tcc.OCCUPATION_TYPE ,tcc.OCCUPATION_NAME,
-        tcc.CONTRACT_DATE ,floor(MONTHS_BETWEEN(SYSDATE, tcc.CONTRACT_DATE))  AS contract_period,
-        FLOOR(MONTHS_BETWEEN(SYSDATE, tcc.DATE_OF_BIRTH) / 12) AS age,
-        PRINCIPAL_BAL ,
-        CASE WHEN floor(MONTHS_BETWEEN(SYSDATE, tcc.CONTRACT_DATE))  < 7 THEN 6 ELSE 7 END AS MOB,
-        CAST(COALESCE(tis.INDEX_SCORE , '1') AS NUMBER) AS digit2income,
-            CAST(COALESCE(tas.INDEX_SCORE, '3') AS NUMBER) AS digit2age,
-            CAST(COALESCE(tos.INDEX_SCORE, '3') AS NUMBER) AS digit2job
-        FROM rawdata tcc 
-        LEFT JOIN TEMP_AGE_SCORE tas ON tas.AGE = FLOOR(MONTHS_BETWEEN(SYSDATE, tcc.DATE_OF_BIRTH) / 12) 
-        LEFT JOIN TEMP_OCCUPATION_SCORE tos ON tos.OCCUPATION_TYPE  = tcc.OCCUPATION_TYPE
-        LEFT JOIN Temp_INCOME_SCORE tis ON tis.INCOME = tcc.GROSS_INCOME
-        )
-        SELECT t2.*,
-        t3.INDEX_SCORE AS TOTAL_DIGIT2
-        FROM  data t2
-        LEFT JOIN TEMP_DIGIT2_SCORE t3 ON t2.digit2income + t2.digit2age + t2.digit2job = t3.SUMDIGIT  
+       SELECT * FROM SUPAT."cscore_digit2"  
         ''', conn) 
-    # print(data_performance)
+    # print('data_performance',data_performance)
+    cursor.close()
     conn.close()
+    
+    
 # =======================ตั้งต้น===================================
 
     file_current = glob.glob("./cscore/input/acc_current/*") 

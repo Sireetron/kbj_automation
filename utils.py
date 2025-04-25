@@ -28,7 +28,7 @@ def clean_column_names(df):
     df.columns = df.columns.str.replace(r'\.', '', regex=True)
     df.columns = df.columns.str.replace(r' ', '_', regex=True)  
     df.columns = df.columns.str.replace('customer_id_no|customer_no|customer_id|national_id', 'customer_no', regex=True) 
-    df.columns = df.columns.str.replace(r'loan_no|loan', 'contract_no', regex=True)
+    df.columns = df.columns.str.replace(r'loan_no', 'contract_no', regex=True)
     df.columns = df.columns.str.replace(r'mobile.*', 'mobile_no', regex=True)
     df.columns = df.columns.str.replace(r'customer_name/surname\(thai\)', 'customer_name', regex=True)  
     return df
