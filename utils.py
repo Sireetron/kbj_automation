@@ -34,6 +34,20 @@ def clean_column_names(df):
     return df
 
 
+def clean_data(data):
+    for col in data.columns:
+        if data[col].dtype == object:  # Only apply to text columns
+            data[col] = (
+                data[col]
+                .str.lower()
+                .str.replace(r'\.', '', regex=True)
+                .str.replace(r' ', '_', regex=True)
+                .str.strip()
+            )
+    return data
+
+
+
 def read_file(pathfile,filename):
     if filename:
         if filename.endswith(".xlsx"):
