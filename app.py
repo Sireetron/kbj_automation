@@ -9,17 +9,21 @@ from service.cscore_service import cscore_service
 from service.smschecker_service import sms_checker_service
 from service.overduestamp_service import overdue_stamp_service
 from service.costivr_service import costivr_service
+from service.assign_inhouse_distribution_service import assign_inhouse_distribution_service
 import zipfile
 import io
 from cscore.cscore_app import cscore_app
 from overdue_oa.overdue_date_app import overdue_date_app
-from costivr.costivr_app import costivr
+from costivr.costivr_app import costivr_app
+from assign_distribution.assign_inhouse_app import assign_inhouse_app
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
 app.config['DOWNLOAD_FOLDER_SMS'] = 'checker/output'  
 app.config['DOWNLOAD_FOLDER_OVERDUESTAMP'] = 'overdue_oa/output'  
 app.config['DOWNLOAD_FOLDER_COST_IVR'] = 'costivr/output'  
+app.config['DOWNLOAD_FOLDER_ASSIGN_INHOUSE'] = 'assign_distribution/output'  
 
 @app.route('/sms-checker', methods=['GET', 'POST'])
 def upload_smschecker():
@@ -38,7 +42,9 @@ def upload_overdue_stamp():
 def upload_costivr():
     return costivr_service()
 
-
+@app.route('/assign-inhouse', methods=['GET', 'POST'])
+def upload_assign_distribution():
+    return assign_inhouse_distribution_service()
 
 
 
@@ -52,8 +58,11 @@ def download_file(folder,filename):
             overdue_date_app() 
             download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_OVERDUESTAMP']) 
     elif folder == 'costivr':
-            costivr() 
+            costivr_app() 
             download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_COST_IVR']) 
+    elif folder == 'assign-inhouse':
+            assign_inhouse_app() 
+            download_path = os.path.abspath(app.config['DOWNLOAD_FOLDER_ASSIGN_INHOUSE']) 
     else:
         return "Folder not found", 404  
     

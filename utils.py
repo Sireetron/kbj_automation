@@ -80,8 +80,110 @@ def all_history(path,query,date,item) :
     return data_mnt[['Loan No',f'BUCKET_SCORE{item}mnt']]
 
 
+def count_num(field_collector,df) :
+    count_ar = len(df)
+    total_rows = field_collector['collector'].count()
+    base_value = count_ar // total_rows
+    remainder = count_ar % total_rows
+    field_collector['num_collection'] = base_value
+    field_collector.loc[total_rows-remainder:, 'num_collection'] += 1
+    return field_collector
 
 
+
+
+def distribute(df,df_oa_proportion) : 
+    num_col_list = dict(zip(df_oa_proportion['collector'], df_oa_proportion['num_collection']))
+
+    distribution_limits = num_col_list
+    distribution_counts = {key: 0 for key in distribution_limits}
+    active_labels = list(distribution_limits.keys(
+    ))
+
+
+    distribut_column = []
+    i = 0
+    while len(distribut_column) < len(df):
+        if not active_labels:
+            break  # All quotas filled
+
+        label = active_labels[i % len(active_labels)]
+
+        if distribution_counts[label] < distribution_limits[label]:
+            distribut_column.append(label)
+            distribution_counts[label] += 1
+        else:
+            # Remove label from rotation if quota is met
+            active_labels.remove(label)
+            i -= 1  # stay at the same index next round to not skip a label
+
+        i += 1
+
+    # Fill the DataFrame
+    df['distribute'] = distribut_column + [None] * (len(df) - len(distribut_column))
+  
+    return df
+
+def flatten_distribution_by_principal(df):
+    principal_sum_per_collector = df.groupby('distribute')['principal_balance'].sum().to_dict()
+    median_principal = np.median(list(principal_sum_per_collector.values()))
+    over_collectors = {k: v for k, v in principal_sum_per_collector.items() if v > median_principal}
+    under_collectors = {k: v for k, v in principal_sum_per_collector.items() if v < median_principal}
+    for over_collector in list(over_collectors.keys()):
+        for under_collector in list(under_collectors.keys()):
+            over_diff = principal_sum_per_collector[over_collector] - median_principal
+            under_diff = median_principal - principal_sum_per_collector[under_collector]
+            if over_diff <= 0 or under_diff <= 0:
+                continue
+            over_accounts = df[df['distribute'] == over_collector].sort_values('principal_balance', ascending=False)
+            under_accounts = df[df['distribute'] == under_collector].sort_values('principal_balance')
+
+            for over_idx, over_row in over_accounts.iterrows():
+                for under_idx, under_row in under_accounts.iterrows():
+                    over_new = (principal_sum_per_collector[over_collector]
+                                - over_row['principal_balance']
+                                + under_row['principal_balance'])
+                    under_new = (principal_sum_per_collector[under_collector]
+                                - under_row['principal_balance']
+                                + over_row['principal_balance'])
+
+                    if (abs(over_new - median_principal) < abs(principal_sum_per_collector[over_collector] - median_principal)) and \
+                       (abs(under_new - median_principal) < abs(principal_sum_per_collector[under_collector] - median_principal)):
+
+                        df.at[over_idx, 'distribute'] = under_collector
+                        df.at[under_idx, 'distribute'] = over_collector
+
+                        principal_sum_per_collector[over_collector] = over_new
+                        principal_sum_per_collector[under_collector] = under_new
+                        break  
+                else:
+                    continue
+                break
+    return df
+
+
+def process_distribution_by_groups(df, group_fields, oa_proportion_collector):
+    combined_dfs = []
+    unique_combinations = df[group_fields].drop_duplicates()
+    for _, combination in unique_combinations.iterrows():
+        condition = True
+        for field in group_fields:
+            condition &= (df[field] == combination[field])
+        df_group = df[condition]
+
+        if df_group.empty:
+            continue
+        df_group = df_group.sort_values(by='principal_balance', ascending=False)
+        count_num_oa = count_num(oa_proportion_collector, df_group)
+        distributed_df = distribute(df_group, count_num_oa)
+        distributed_df = flatten_distribution_by_principal(distributed_df)
+        combined_dfs.append(distributed_df)
+
+    if combined_dfs:
+        final_df = pd.concat(combined_dfs, ignore_index=True)
+    else:
+        final_df = pd.DataFrame()  
+    return final_df
 
 
 

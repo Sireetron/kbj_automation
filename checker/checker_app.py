@@ -22,24 +22,7 @@ sys.path.append(os.path.abspath(''))
 
 def checker():
     
-    # try:
-    #     conn_tibero = jaydebeapi.connect(
-    #         os.getenv("TIBERO_JCLASSNAME"),
-    #         os.getenv("TIBERO_URL"),
-    #         [os.getenv("TIBERO_USER"), os.getenv("TIBERO_PASSWORD")],
-    #         os.getenv("TIBERO_JARS")
-    #     )
-    #     tibero_test = pd.read_sql("SELECT 1 FROM DUAL", conn_tibero)
-    #     print("Tibero Test Query Result:")
-    #     print(tibero_test)
-    # except Exception as e:
-    #     print("Error connecting to Tibero:", e)
-    # finally:
-    #     if 'conn_tibero' in locals():
-    #         conn_tibero.close()
-    
-    
-    
+
     try:
         conn_oracle = oracledb.connect(
                         user=os.getenv("ORACLE_USER"),
@@ -57,10 +40,10 @@ def checker():
         # )
         sms_type = pd.read_sql("SELECT * FROM SUPAT.REF_SMS_WORDING", conn_oracle)
         # print("Oracle SMS Type Query Result:")
-        print(sms_type)
+        # print(sms_type)
     
         today_str = datetime.today().strftime('%Y-%m-%d')
-        print('today_str',today_str)
+        # print('today_str',today_str)
         csv_path = f'./checker/input/customer_input/customer_{today_str}.csv'
 
         if os.path.exists(csv_path):
@@ -74,7 +57,19 @@ def checker():
         else:
             print("Querying database...")
             customer = pd.read_sql(
-              'SELECT * FROM SUPAT."customer_current"'
+              '''WITH data_contract AS (
+                    SELECT cid.AS_OF_DATE,
+                        cid.CONTRACT_NO AS CONTRACT_NO_VAL,
+                        cid.NATIONAL_ID,
+                        cid.MONTHLY_INST_AMT AS MONTHLY_INST_AMT_VAL,
+                        cid.FIRST_DUE_DATE 
+                    FROM jfdwh.CONTRACT_INFO_DAILY cid 
+                    WHERE AS_OF_DATE = (SELECT MAX(AS_OF_DATE) FROM JFDWH.CONTRACT_INFO_DAILY)
+                )
+                SELECT dc."AS_OF_DATE",dc."CONTRACT_NO_VAL",dc."NATIONAL_ID",dc."MONTHLY_INST_AMT_VAL",dc."FIRST_DUE_DATE", 
+                    c.MOBILE_PHONE_NO AS MOBILE_PHONE_NO_VAL
+                FROM data_contract dc
+                LEFT JOIN JFDWH.CUSTOMER c ON dc.NATIONAL_ID = c.NATIONAL_ID_NO'''
             , conn_oracle, dtype={
                 'MOBILE_PHONE_NO_VAL': str,
                 'NATIONAL_ID': str,
@@ -204,6 +199,13 @@ def checker():
     if 'ar_today' in assign_delay_merge.columns:
         assign_delay_merge['sumamt_check'] = assign_delay_merge.apply(
         lambda row: True if row['ar_today'] == row['overduesumamt']  else row['overduesumamt'],
+        axis=1)
+    else:
+        print(" missing.")
+    
+    if 'monthly_inst_amt' in assign_delay_merge.columns:
+        assign_delay_merge['monthly_inst_amt_val_check'] = assign_delay_merge.apply(
+        lambda row: True if row['monthly_inst_amt'] == row['monthly_inst_amt_val']  else row['monthly_inst_amt_val'],
         axis=1)
     else:
         print(" missing.")
