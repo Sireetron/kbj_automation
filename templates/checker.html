@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload CSV</title>
 </head>
 
 <body>
-    <h1>SMS_CHECKER File</h1>
+    <h1>SMS Checker </h1>
     <p>
         {% for msg in messages %}
             <div>{{ msg }}</div>
@@ -16,58 +15,51 @@
     
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
-    
-        <h2>filecheck</h2>
-        <i>--  (xlsx)ใช้ file sheetname ต้องชื่อ Data, ชื่อ column  (พิมเล็กพิมใหญ่มีผล) ต้องมี <br/>
-            contract_no , <br/>
-            mobile_no, <br/>
-            4_digit (ไม่ต้องมีก็ได้), <br/>
-            sms_type(ชื่อ sms_type ต้องตรงtypeใน databaseเป้ะๆ ดูได้ที่ Oracle) <br/>
-            monthly_inst_amt  (ไม่ต้องมีก็ได้), <br/>
-            ,ar_today(ไม่ต้องมีก็ได้) <br/> </i>
-        <br></br>
+        <h3>File to Check</h3>
         <input type="file" name="file_assign_input" multiple>
         <button type="submit" name="submit_section" value="assign_input">Upload sms file </button>
-
-
-
-
-        <h2>Acc</h2>
-        <i>--  (csv)ใช้ ACC ล่าสุด original ไม่ต้องเปลี่ยนอะไรทั้งนั้น </i>
         <br></br>
+        <i>-- ประเภทไฟล์ : ใช้ ไฟล์ ที่ต้องการจะ check </br>
+            -- สกุลไฟล์ : xlsx </br>
+            -- จำนวนไฟล์ที่อัพโหลด : 1 ไฟล์ </br>
+            -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : Data / กี่ sheet ก็ได้ / อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : จะมี Column อะไรก็ได้ แต่ต้องมี (พิมเล็กพิมใหญ่มีผล)
+            <li> contract_no </li>
+            <li> mobile_no </li>
+            <li> 4_digit (optional) </li>
+            <li> sms_type </li>
+            <li> monthly_inst_amt (optional) </li>
+            <li> ar_today (optional) </li>
+            -- ความจำเป็น : บังคับอัพโหลด
+         </i>
+
+        <h3>Acc Current</h3>
         <input type="file" name="file_acc" multiple>
         <button type="submit" name="submit_section" value="acc">Upload  ACC</button>
-       
+        <br></br>
+        <i>-- ประเภทไฟล์ : ใช้ ไฟล์ Acc original ล่าสุด จาก FileZilla เพื่อเอา oversumamt เช่น Acc_20250401_0830 </br>
+            -- สกุลไฟล์ : csv </br>
+            -- จำนวนไฟล์ที่อัพโหลด : 1 ไฟล์ </br>
+            -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้ / 1 sheet เท่านั้น / อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : ใช้ original ไฟล์ ไม่ต้องทำอะไรทั้งนั้น </br>
+            -- ความจำเป็น : บังคับอัพโหลด
+         </i>
+
+
+         <h3>Customer Information</h3>
+         <input type="file" name="file_customer" multiple>
+         <button type="submit" name="submit_section" value="customer">Upload  Customer</button>
+         <br></br>
+         <i> -- ประเภทไฟล์ : ดึงข้อมูลจาก Oracle โดย รัน Script  SELECT * FROM "customer_current"  และ  export เป็น CSV ออกมาจาก Oracle  </br>
+             -- สกุลไฟล์ : csv </br>
+             -- จำนวนไฟล์ที่อัพโหลด : 1 ไฟล์ </br>
+             -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้ / 1 sheet เท่านั้น / อะไรก็ได้ </br>
+             -- ชื่อ Column ที่ต้องมี : ใช้ Original ไฟล์ จาก Oracle ไม่ต้องเปลี่ยนอะไรทั้งนั้น </br>
+             -- ความจำเป็น : บังคับอัพโหลด
+          </i>
+
     </form>
-    
-
-
-
-
-    
     <p>{{ message }}</p>
-
-    <body class="container mt-4">
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>contract_no</th>
-                    <th>mobile_no</th>
-                    <th>sms_type</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in table %}
-                <tr>
-        
-                    <td>{{ row.contract_no }}</td>
-                    <td>{{ row.mobile_no }}</td>
-                    <td>{{ row.sms_type }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </body>
 
     <p>
      {% if download_filename %}

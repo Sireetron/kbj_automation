@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <h2>CSCORE Files</h2>
+    <h2>CSCORE</h2>
     <p>
         {% for msg in messages %}
             <div>{{ msg }}</div>
@@ -14,35 +14,79 @@
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
     
-        <h2>acc_current</h2>
-        <i>--  (csv)ใช้ ACC เดือนล่าสุดตั้งต้น ไฟล์ชื่ออะไรก็ได้ แต่ต้องมี column name contract_no </i>
-        <br></br>
+        <h3>ACC Current</h3>
         <input type="file" name="file_acc_current" multiple>
         <button type="submit" name="submit_section" value="acc_current">Upload acc_current</button>
-
-
-
-
-        <h2>acc_history</h2>
-        <i>--  (csv)ใช้ AR ย้อนหลัง 6 เดือน อัพโหลดได้หลายไฟล์ ไฟล์ชื่ออะไรก็ได้ แต่ต้องมี column name contract_no </i>
         <br></br>
+        <i>-- ประเภทไฟล์ : ใช้ ไฟล์ Acc original ล่าสุด จาก FileZilla เช่น Acc_20250401_0830 </br>
+            -- สกุลไฟล์ : csv </br>
+            -- จำนวนไฟล์ที่อัพโหลด : 1 ไฟล์ </br>
+            -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้ /1 sheet เท่านั้น/ อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : ใช้ original ไฟล์ ไม่ต้องทำอะไรทั้งนั้น</br>     
+            -- ความจำเป็น : บังคับอัพโหลด
+         </i>
+
+
+        <h3> Acc History</h3>
         <input type="file" name="file_acc_history" multiple>
         <button type="submit" name="submit_section" value="acc_history">Upload  acc_history</button>
-
-
-
-        <h2>tdr</h2>
-        <i>-- (csv/xlsx) ใช้ ไฟล์ TDR อัพโหลดได้ 1 ไฟล์ หรืออาจ หลายไฟล์ ระบบจะเอามาต่อกันให้ แต่ต้องเป็นpattern เดียวกันถ้าต้องการต่อ แต่ต้องมี column name  contract_no, product,project_code_name</i>
         <br></br>
+        <i>-- ประเภทไฟล์ : ใช้ ไฟล์ Acc original 6 เดือนย้อนหลัง จาก FileZilla เช่น 
+            <li> Acc_20250401_0830 </li>
+            <li> Acc_20250301_0830 </li>
+            <li> Acc_20250201_0830 </li>
+            <li> Acc_20250101_0830 </li>
+            <li> Acc_20241201_0830 </li>
+            <li> Acc_20241101_0830 </li>
+       
+            -- สกุลไฟล์ : csv </br>
+            -- จำนวนไฟล์ที่อัพโหลด : 6 ไฟล์</br>
+            -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้  /1 sheet เท่านั้น/ อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : ใช้ original ไฟล์ ไม่ต้องทำอะไรทั้งนั้น</br> 
+            -- ความจำเป็น : บังคับอัพโหลด
+         </i>
+
+
+
+        <h3>TDR</h3>
         <input type="file" name="file_tdr" multiple>
         <button type="submit" name="submit_section" value="tdr">Upload  tdr</button>
-
-        <h2>assign</h2>
-        <i>-- (xlsx) จะอัพโหลดหรือไม่อัพโหลดก็ได้ ถ้าได้โหลด จะได้ Cscore ของทุก account ถ้ามี
-             assign จะได้ทั้ง ไฟล์ทั้งหมด และไฟล์ที่ assign ไฟล์จะโหลดออกมาเป็น Zip ไฟล์  แต่ต้องมี column name  contract_no, product,project_code_name</i>
         <br></br>
+        <i>-- ประเภทไฟล์ : ใช้ ไฟล์ TDR  </br>
+            -- สกุลไฟล์ : csv/xlsx </br>
+            -- จำนวนไฟล์ที่อัพโหลด : กี่ไฟล์ก็ได้แต่ต้องมี pattern เดียวกัน</br>
+            -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้  / 1 sheet เท่านั้น/ อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : จะมี column อะไรก็ได้ แต่ต้องมี 
+            <li> contract_no </li>
+            <li> product </li>
+            <li> project_code_name </li>
+            -- ความจำเป็น : บังคับอัพโหลด
+         </i>
+
+         <h3>Digit2 Infomation</h3>
+         <input type="file" name="file_digit2" multiple>
+         <button type="submit" name="submit_section" value="digit2">Upload  digit2</button>
+         <br></br>
+         <i>-- ประเภทไฟล์ : ดึงข้อมูลจาก Oracle โดย รัน Script  SELECT * FROM SUPAT."cscore_digit2" และ  export เป็น CSV ออกมาจาก Oracle  </br>
+             -- สกุลไฟล์ : csv </br>
+             -- จำนวนไฟล์ที่อัพโหลด : 1 ไฟล์ </br>
+             -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้  / 1 sheet เท่านั้น/ อะไรก็ได้ </br>
+             -- ชื่อ Column ที่ต้องมี : ใช้ Original ไฟล์ จาก Oracle ไม่ต้องเปลี่ยนอะไรทั้งนั้น </br>
+             -- ความจำเป็น : บังคับอัพโหลด
+          </i>
+
+        <h3>Assign</h3>
         <input type="file" name="file_assign" multiple>
         <button type="submit" name="submit_section" value="assign">Upload assign</button>
+        <br></br>
+        <i>-- ประเภทไฟล์ : ใช้ไฟล์ Assign ที่ต้องการให้ stamp cscore เฉพาะกลุ่ม ไม่จำเป็นต้องอัพโหลดก็ได้ จะได้เป็น Zip ไฟล์ </br>
+            -- สกุลไฟล์ : xlsx </br>
+            -- จำนวนไฟล์ที่อัพโหลด :  1 ไฟล์ </br>
+            -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้  / 1 sheet เท่านั้น / อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : จะมี column อะไรก็ได้ แต่ต้องมี 
+            <li> contract_no </li>
+            -- ความจำเป็น : ไม่บังคับ
+         </i>
     
        
     </form>

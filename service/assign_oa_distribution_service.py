@@ -9,30 +9,23 @@ import glob
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
-app.config['UPLOAD_FOLDER_SMS'] = './checker/input/assign_input'
-app.config['UPLOAD_FOLDER_ACC'] = './checker/input/acc'
-app.config['DOWNLOAD_FOLDER_SMS'] = './checker/output' 
-app.config['UPLOAD_FOLDER_ACC'] = './checker/input/customer_input' 
-# app.config['DOWNLOAD_CSCORE'] = 'cscore/output/' 
+app.config['UPLOAD_FOLDER_ASSIGN'] = './assign_distribution/input/assign'
+app.config['UPLOAD_FOLDER_PORTION'] = './assign_distribution/input/portion'
+app.config['UPLOAD_FOLDER_PARAMETER'] = './assign_distribution/input/parameter'
+app.config['DOWNLOAD_FOLDER_ASSIGN'] = './assign_distribution/output' 
 
 
 class UploadFileForm(FlaskForm):
     file = FileField("File")
     submit = SubmitField("Upload File")
 
-table_checker = [
-    { "contract_no": "3250800192489", "mobile_no": "0812345678","sms_type":"C4C"},
-    { "contract_no": "1819900360011", "mobile_no": "0836654587","sms_type":"H4C"},
-]
-
-
-def sms_checker_service():
+def assign_oa_distribution_service():
     folder_mapping = {
-        'assign_input': 'UPLOAD_FOLDER_SMS',
-        'acc': 'UPLOAD_FOLDER_ACC',
-        'customer' :'UPLOAD_FOLDER_ACC'
+        'assign': 'UPLOAD_FOLDER_ASSIGN',
+        'portion': 'UPLOAD_FOLDER_PORTION',
+         'parameter': 'UPLOAD_FOLDER_PARAMETER',
     }
-    folder_name = 'sms-checker'
+    folder_name = 'assign-oa'
     form = UploadFileForm()
     download_filename = []  
     message = f"--------------------------------------------------------------------------------------------"
@@ -43,8 +36,7 @@ def sms_checker_service():
     if form.validate_on_submit():
         section = request.form.get("submit_section")  # Get which button was pressed
         files = request.files.getlist(f"file_{section}")  # Get files based on section
-        # print('section',section)
-        # print('files',files)
+
         if section and files:
                 upload_folder = app.config.get(folder_mapping.get(section))  # Default folder
                 # print('upload_folder',upload_folder)
@@ -72,4 +64,4 @@ def sms_checker_service():
                 # download_filename = saved_files[0] if saved_files else None 
            
         
-    return render_template('checker.html', form=form, download_filename=f'smscheck.xlsx', messages=session.get('messages', []), folder_name=folder_name, table=table_checker)
+    return render_template('assign.html', form=form, download_filename=f'assign-oa-output.xlsx', messages=session.get('messages', []), folder_name=folder_name)

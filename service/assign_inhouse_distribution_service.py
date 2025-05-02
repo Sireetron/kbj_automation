@@ -64,4 +64,4 @@ def assign_inhouse_distribution_service():
                 # download_filename = saved_files[0] if saved_files else None 
            
         
-    return render_template('assign-inhouse.html', form=form, download_filename=f'assign-inhouse-output.xlsx', messages=session.get('messages', []), folder_name=folder_name)
+    return render_template('assign.html', form=form, download_filename=f'assign-inhouse-output.xlsx', messages=session.get('messages', []), folder_name=folder_name)

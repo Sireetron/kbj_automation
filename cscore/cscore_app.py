@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv() 
 import os
 import oracledb
-from utils import read_file,clean_column_names,all_history,transform_files
+from utils import read_file,clean_column_names,all_history,transform_files,save_to_split_excel
 sys.path.append(os.path.abspath(''))
 
 
@@ -42,11 +42,15 @@ def cscore_app() :
     query = pd.read_sql(f'''
         SELECT * FROM supat.bucket_score  
         ''', conn) 
-    # print('query',query)
-    data_performance = pd.read_sql(f'''
-       SELECT * FROM SUPAT."cscore_digit2"  
-        ''', conn) 
-    # print('data_performance',data_performance)
+
+    # data_performance = pd.read_sql(f'''
+    #    SELECT * FROM SUPAT."cscore_digit2"  
+    #     ''', conn) 
+    data_digit2_name = glob.glob("./cscore/input/digit2/*") 
+    data_digit2_name = data_digit2_name[0].split('\\')[1]
+    data_digit2 = read_file('./cscore/input/digit2/',data_digit2_name)
+    data_digit2 = clean_column_names(data_digit2)
+    # print('data_digit2',data_digit2)
     cursor.close()
     conn.close()
     
@@ -90,13 +94,13 @@ def cscore_app() :
         
     # performane digit2
     # data_performance = pd.read_csv('./cscore/input/performance_peronal_info/performance.csv')
-    data_performance = clean_column_names(data_performance)
+    # data_digit2 = clean_column_names(data_performance)
     # ==============================================================================================================================
 
     data_digit1['contract_no'] = data_digit1['contract_no'].astype(str)
-    data_performance['contract_no']= data_performance['contract_no'].astype(str)
+    data_digit2['contract_no']= data_digit2['contract_no'].astype(str)
     data_digit1['avg_digit1'] = data_digit1.loc[:, data_digit1.columns.str.startswith('bucket_score')].apply(pd.to_numeric, errors='coerce').sum(axis=1).fillna(0).astype(int)/6
-    data_all_digit = data_performance.merge(data_digit1, left_on='contract_no', right_on='contract_no', how='left')
+    data_all_digit = data_digit2.merge(data_digit1, left_on='contract_no', right_on='contract_no', how='left')
     # data_all_digit['AVG_DIGIT1'] = data_all_digit.loc[:, data_all_digit.columns.str.startswith('SCORE_INDEX')].apply(pd.to_numeric, errors='coerce').mean(axis=1).fillna(0).astype(int)
     data_all_digit['mob'] = pd.to_numeric(data_all_digit['mob'], errors='coerce').fillna(0).astype(int)
 
@@ -155,6 +159,7 @@ def cscore_app() :
     for file in glob.glob(os.path.join(output_dir, "*")):
         os.remove(file)
     data_cscore.to_csv(f'./cscore/output/all_csore.csv',index=False)
+    # save_to_split_excel(data_cscore,'./cscore/output/all_cscore.xlsx')
 
 
 

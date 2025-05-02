@@ -13,7 +13,7 @@ app.config['UPLOAD_ACC_CURRENT'] = './cscore/input/acc_current'
 app.config['UPLOAD_ACC_HISTORY'] = './cscore/input/acc_history_monthly' 
 app.config['UPLOAD_TDR'] = './cscore/input/tdr' 
 app.config['UPLOAD_ASSIGN'] = './cscore/input/assign_data' 
-
+app.config['UPLOAD_DIGIT2'] = './cscore/input/digit2' 
 
 class UploadFileForm(FlaskForm):
     file = FileField("File")
@@ -25,6 +25,7 @@ def cscore_service():
         'acc_history': 'UPLOAD_ACC_HISTORY',
         'tdr': 'UPLOAD_TDR',
         'assign': 'UPLOAD_ASSIGN',
+        'digit2' :'UPLOAD_DIGIT2'
     }
     
     folder_name = 'cscore'

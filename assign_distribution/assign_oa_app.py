@@ -4,10 +4,10 @@ import numpy as np
 import re
 import sys
 import os
-from utils import read_file,clean_column_names,clean_data,process_distribution_by_groups_inhouse
+from utils import read_file,clean_column_names,clean_data,process_distribution_by_groups_oa
 sys.path.append(os.path.abspath(''))
 
-def assign_inhouse_app() :
+def assign_oa_app() :
     oa_proportion_path = glob.glob("./assign_distribution/input/portion/*")[0].split('\\')[-1] 
     oa_proportion = read_file('./assign_distribution/input/portion/',oa_proportion_path)
     oa_proportion = clean_column_names(oa_proportion)
@@ -26,6 +26,6 @@ def assign_inhouse_app() :
     
 
     group_fields = list(param['parameter'])
-    final_df = process_distribution_by_groups_inhouse(assign, group_fields, oa_proportion)
-    final_df.to_excel('./assign_distribution/output/assign-inhouse-output.xlsx')
+    final_df = process_distribution_by_groups_oa(assign, group_fields, oa_proportion)
+    final_df.to_excel('./assign_distribution/output/assign-oa-output.xlsx')
     # print('final_df',final_df)

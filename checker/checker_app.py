@@ -39,47 +39,41 @@ def checker():
         #     os.getenv("ORACLE_JARS")
         # )
         sms_type = pd.read_sql("SELECT * FROM SUPAT.REF_SMS_WORDING", conn_oracle)
-        # print("Oracle SMS Type Query Result:")
-        # print(sms_type)
-    
-        today_str = datetime.today().strftime('%Y-%m-%d')
-        # print('today_str',today_str)
-        csv_path = f'./checker/input/customer_input/customer_{today_str}.csv'
+        # today_str = datetime.today().strftime('%Y-%m-%d')
+        # csv_path = f'./checker/input/customer_input/customer_{today_str}.csv'
 
-        if os.path.exists(csv_path):
-            print("Loading data from CSV...")
+        # if os.path.exists(csv_path):
+        #     print("Loading data from CSV...")
             
-            customer = pd.read_csv(csv_path, dtype={
-                'MOBILE_PHONE_NO_VAL': str,
-                'NATIONAL_ID': str,
-                'CONTRACT_NO_VAL': str
-            })
-        else:
-            print("Querying database...")
-            customer = pd.read_sql(
-              '''WITH data_contract AS (
-                    SELECT cid.AS_OF_DATE,
-                        cid.CONTRACT_NO AS CONTRACT_NO_VAL,
-                        cid.NATIONAL_ID,
-                        cid.MONTHLY_INST_AMT AS MONTHLY_INST_AMT_VAL,
-                        cid.FIRST_DUE_DATE 
-                    FROM jfdwh.CONTRACT_INFO_DAILY cid 
-                    WHERE AS_OF_DATE = (SELECT MAX(AS_OF_DATE) FROM JFDWH.CONTRACT_INFO_DAILY)
-                )
-                SELECT dc."AS_OF_DATE",dc."CONTRACT_NO_VAL",dc."NATIONAL_ID",dc."MONTHLY_INST_AMT_VAL",dc."FIRST_DUE_DATE", 
-                    c.MOBILE_PHONE_NO AS MOBILE_PHONE_NO_VAL
-                FROM data_contract dc
-                LEFT JOIN JFDWH.CUSTOMER c ON dc.NATIONAL_ID = c.NATIONAL_ID_NO'''
-            , conn_oracle, dtype={
-                'MOBILE_PHONE_NO_VAL': str,
-                'NATIONAL_ID': str,
-                'CONTRACT_NO_VAL': str
-            })
-
-            # Save to CSV
-            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-            customer.to_csv(csv_path, index=False)
-            print('customer',customer)
+        #     customer = pd.read_csv(csv_path, dtype={
+        #         'MOBILE_PHONE_NO_VAL': str,
+        #         'NATIONAL_ID': str,
+        #         'CONTRACT_NO_VAL': str
+        #     })
+        # else:
+        #     print("Querying database...")
+        #     customer = pd.read_sql(
+        #       '''WITH data_contract AS (
+        #             SELECT cid.AS_OF_DATE,
+        #                 cid.CONTRACT_NO AS CONTRACT_NO_VAL,
+        #                 cid.NATIONAL_ID,
+        #                 cid.MONTHLY_INST_AMT AS MONTHLY_INST_AMT_VAL,
+        #                 cid.FIRST_DUE_DATE 
+        #             FROM jfdwh.CONTRACT_INFO_DAILY cid 
+        #             WHERE AS_OF_DATE = (SELECT MAX(AS_OF_DATE) FROM JFDWH.CONTRACT_INFO_DAILY)
+        #         )
+        #         SELECT dc."AS_OF_DATE",dc."CONTRACT_NO_VAL",dc."NATIONAL_ID",dc."MONTHLY_INST_AMT_VAL",dc."FIRST_DUE_DATE", 
+        #             c.MOBILE_PHONE_NO AS MOBILE_PHONE_NO_VAL
+        #         FROM data_contract dc
+        #         LEFT JOIN JFDWH.CUSTOMER c ON dc.NATIONAL_ID = c.NATIONAL_ID_NO'''
+        #     , conn_oracle, dtype={
+        #         'MOBILE_PHONE_NO_VAL': str,
+        #         'NATIONAL_ID': str,
+        #         'CONTRACT_NO_VAL': str
+        #     })
+        #     os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+        #     customer.to_csv(csv_path, index=False)
+        #     print('customer',customer)
     except Exception as e:
         print("Error connecting to Oracle:", e)
     finally:
@@ -113,7 +107,17 @@ def checker():
 
     # //////////////////*********************************************/////////////////////************************
 
+    customer_file_name = glob.glob("./checker/input/customer_input/*") 
+    customer_file_name = customer_file_name[0].split('\\')[1]
+    customer = read_file('./checker/input/customer_input/',customer_file_name)
+    customer = clean_column_names(customer)
     
+    
+    customer = pd.read_csv('./checker/input/customer_input/customer.csv', dtype={
+                'MOBILE_PHONE_NO_VAL': str,
+                'NATIONAL_ID': str,
+                'CONTRACT_NO_VAL': str
+            })
     customer.columns = customer.columns.str.lower()  
 
 

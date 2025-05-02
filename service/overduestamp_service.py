@@ -1,9 +1,8 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request
 import os
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from werkzeug.utils import secure_filename
-from checker.checker_app import checker
 from flask import session
 import glob
 
@@ -28,6 +27,7 @@ def overdue_stamp_service():
     }
     folder_name = 'overdue-stamp'
     form = UploadFileForm()
+
 
     if 'messages' not in session:
             session['messages'] = []  

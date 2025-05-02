@@ -13,6 +13,18 @@ import numpy as np
 
 
 
+def save_to_split_excel(df,pathsave):
+    max_rows_per_sheet = 500000
+    total_rows = len(df)
+    with pd.ExcelWriter(pathsave, engine='xlsxwriter') as writer:
+        for i in range(0, total_rows, max_rows_per_sheet):
+            end = min(i + max_rows_per_sheet, total_rows)
+            print('end',end)
+            sheet_name = f'Sheet_{i // max_rows_per_sheet + 1}'
+            df.iloc[i:end].to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+
 
 
 def transform_files(files):
@@ -162,7 +174,7 @@ def flatten_distribution_by_principal(df):
     return df
 
 
-def process_distribution_by_groups(df, group_fields, oa_proportion_collector):
+def process_distribution_by_groups_inhouse(df, group_fields, oa_proportion_collector):
     combined_dfs = []
     unique_combinations = df[group_fields].drop_duplicates()
     for _, combination in unique_combinations.iterrows():
@@ -177,6 +189,48 @@ def process_distribution_by_groups(df, group_fields, oa_proportion_collector):
         count_num_oa = count_num(oa_proportion_collector, df_group)
         distributed_df = distribute(df_group, count_num_oa)
         distributed_df = flatten_distribution_by_principal(distributed_df)
+        combined_dfs.append(distributed_df)
+
+    if combined_dfs:
+        final_df = pd.concat(combined_dfs, ignore_index=True)
+    else:
+        final_df = pd.DataFrame()  
+    return final_df
+
+def count_portion(field_collector, df):
+    count_ar = len(df)
+
+    # Step 1: calculate initial (floored) number of collections
+    oa_proportion = field_collector.copy()
+    raw_counts = oa_proportion['%assign'] * count_ar
+    oa_proportion['num_collection'] = np.floor(raw_counts).astype(int)
+
+    # Step 2: calculate remainder
+    total_assigned = oa_proportion['num_collection'].sum()
+    remainder = count_ar - total_assigned
+
+    # Step 3: add remainder to the row with maximum %assign
+    if remainder > 0:
+        max_idx = oa_proportion['%assign'].idxmax()
+        oa_proportion.loc[max_idx, 'num_collection'] += remainder
+
+    return oa_proportion
+
+
+def process_distribution_by_groups_oa(df, group_fields, oa_proportion_collector):
+    combined_dfs = []
+    unique_combinations = df[group_fields].drop_duplicates()
+    for _, combination in unique_combinations.iterrows():
+        condition = True
+        for field in group_fields:
+            condition &= (df[field] == combination[field])
+        df_group = df[condition]
+
+        if df_group.empty:
+            continue
+        df_group = df_group.sort_values(by='principal_balance', ascending=False)
+        count_num_oa = count_portion(oa_proportion_collector, df_group)
+        distributed_df = distribute(df_group, count_num_oa)
         combined_dfs.append(distributed_df)
 
     if combined_dfs:

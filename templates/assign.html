@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+ <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <h1>Assign  Collector</h1>
+    <p>
+        {% for msg in messages %}
+            <div>{{ msg }}</div>
+        {% endfor %}
+    </p>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+    
+        <h3>Assign</h3>
+        <input type="file" name="file_assign" multiple>
+        <button type="submit" name="submit_section" value="assign">Upload assign file </button>
+        <br></br>
+        <i>-- ประเภทไฟล์ : ไฟล์ Account ที่ต้องการ assign </br>
+            -- สกุลไฟล์ : xlsx </br>
+            -- จำนวนไฟล์ที่อัพโหลด : 1 ไฟล์ </br>
+            -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้ / 1 sheet เท่านั้น / อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : จะมี Column อะไรก็ได้ แต่ต้องมี 
+            <li> contract_no </li>
+            -- ความจำเป็น : บังคับอัพโหลด
+         </i>
+
+        <h3>Portion</h3>
+        <input type="file" name="file_portion" multiple>
+        <button type="submit" name="submit_section" value="portion">Upload  Portion</button>
+        <br></br>
+        <i>-- ประเภทไฟล์ : ไฟล์ที่มี collector ที่ต้องการ assign </br>
+            -- สกุลไฟล์ : xlsx </br>
+            -- จำนวนไฟล์ที่อัพโหลด : 1 ไฟล์ </br>
+            -- ชื่อ sheet / จำนวนsheet / ชื่อไฟล์ : อะไรก็ได้ / 1 sheet เท่านั้น / อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : จะมี Column อะไรก็ได้ แต่ต้องมี 
+            <li> collector </li>
+            -- ความจำเป็น : บังคับอัพโหลด
+         </i>
+
+        <h3>Parameter</h3>
+        <input type="file" name="file_parameter" multiple>
+        <button type="submit" name="submit_section" value="parameter">Upload  Parameter</button>
+        <br></br>
+        <i>-- ประเภทไฟล์ : ข้อมูล Parameter ที่ต้องการให้พิจารณาในการ Assign เช่น Status LM , Overdue Months Division Code แต่ต้องเป็นชื่อเดียวกับ Column ในไฟล์ Assign  </br>
+            -- สกุลไฟล์ : csv </br>
+            -- จำนวนไฟล์ที่อัพโหลด : 1 ไฟล์ </br>
+            -- ชื่อ sheet  / ชื่อไฟล์ : อะไรก็ได้ / อะไรก็ได้ </br>
+            -- ชื่อ Column ที่ต้องมี : Column จะต้องมีชื่อเหมือนในไฟล์ Assign </br>
+            -- ความจำเป็น : บังคับอัพโหลด
+         </i>
+    </form>
+    
+
+    <p>
+     {% if download_filename %}
+        <a href="{{ url_for('download_file', folder=folder_name, filename=download_filename) }}">
+            <button>Download</button>
+        </a>
+    {% endif %}
+    </p>
+
+
+</body>
+
+</html> 
+
