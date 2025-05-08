@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from checker.checker_app import checker
 from flask import session
 import glob
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
@@ -63,5 +64,6 @@ def assign_inhouse_distribution_service():
 
                 # download_filename = saved_files[0] if saved_files else None 
            
-        
-    return render_template('assign.html', form=form, download_filename=f'assign-inhouse-output.xlsx', messages=session.get('messages', []), folder_name=folder_name)
+    file_assign = glob.glob("./assign_distribution/input/assign/*.xlsx")
+    file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])   
+    return render_template('assign.html', form=form, download_filename=f'assign_inhouse_{file_path}.xlsx', messages=session.get('messages', []), folder_name=folder_name)

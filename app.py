@@ -88,32 +88,32 @@ def download_file(folder,filename):
 
 
 
-cscore_lock = Lock()
+# cscore_lock = Lock()
 @app.route('/download/<folder_name>/<path:outputpath>')
 def process_and_download_file_cscore(folder_name, outputpath):
-    acquired = cscore_lock.acquire(blocking=False)
-    if not acquired:
-        return "Another request is processing. Please try again later.", 429
+    # acquired = cscore_lock.acquire(blocking=False)
+    # if not acquired:
+    #     return "Another request is processing. Please try again later.", 429
 
-    try:
-        cscore_app()  # Only one thread can call this at a time
+    # try:
+    cscore_app()  # Only one thread can call this at a time
 
-        folder_path = f'{outputpath}'
-        if not os.path.exists(folder_path):
-            return "Folder does not exist", 404
+    folder_path = f'{outputpath}'
+    if not os.path.exists(folder_path):
+        return "Folder does not exist", 404
 
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, files in os.walk(folder_path):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    zipf.write(file_path, os.path.relpath(file_path, folder_path))
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, _, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                zipf.write(file_path, os.path.relpath(file_path, folder_path))
 
-        zip_buffer.seek(0)
-        return send_file(zip_buffer, as_attachment=True, download_name=f"{folder_name}.zip", mimetype='application/zip')
+    zip_buffer.seek(0)
+    return send_file(zip_buffer, as_attachment=True, download_name=f"{folder_name}.zip", mimetype='application/zip')
 
-    finally:
-        cscore_lock.release()
+    # finally:
+    #     cscore_lock.release()
 
 
 if __name__ == '__main__':

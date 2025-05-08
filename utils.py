@@ -136,43 +136,130 @@ def distribute(df,df_oa_proportion) :
   
     return df
 
-def flatten_distribution_by_principal(df):
-    principal_sum_per_collector = df.groupby('distribute')['principal_balance'].sum().to_dict()
-    median_principal = np.median(list(principal_sum_per_collector.values()))
-    over_collectors = {k: v for k, v in principal_sum_per_collector.items() if v > median_principal}
-    under_collectors = {k: v for k, v in principal_sum_per_collector.items() if v < median_principal}
-    for over_collector in list(over_collectors.keys()):
-        for under_collector in list(under_collectors.keys()):
-            over_diff = principal_sum_per_collector[over_collector] - median_principal
-            under_diff = median_principal - principal_sum_per_collector[under_collector]
-            if over_diff <= 0 or under_diff <= 0:
+# def flatten_distribution_by_principal(df):
+#     principal_sum_per_collector = df.groupby('distribute')['principal_balance'].sum().to_dict()
+#     median_principal = np.median(list(principal_sum_per_collector.values()))
+    
+#     over_collectors = {k: v for k, v in principal_sum_per_collector.items() if v > median_principal}
+#     under_collectors = {k: v for k, v in principal_sum_per_collector.items() if v < median_principal}
+    
+#     if not under_collectors:
+#         return df  # Nothing to rebalance
+    
+#     min_underload = min(under_collectors.values())
+
+#     for over_collector in list(over_collectors.keys()):
+#         target = median_principal + min_underload
+#         over_accounts = df[df['distribute'] == over_collector].sort_values('principal_balance')
+
+#         for under_collector in list(under_collectors.keys()):
+#             under_accounts = df[df['distribute'] == under_collector].sort_values('principal_balance', ascending=False)
+
+#             for over_idx, over_row in over_accounts.iterrows():
+#                 for under_idx, under_row in under_accounts.iterrows():
+#                     # Simulate swap
+#                     over_new = principal_sum_per_collector[over_collector] - over_row['principal_balance'] + under_row['principal_balance']
+#                     under_new = principal_sum_per_collector[under_collector] - under_row['principal_balance'] + over_row['principal_balance']
+
+#                     # Check if this brings over_collector closer to target
+#                     if abs(over_new - target) < abs(principal_sum_per_collector[over_collector] - target) and \
+#                        abs(under_new - median_principal) < abs(principal_sum_per_collector[under_collector] - median_principal):
+
+#                         # Perform swap
+#                         df.at[over_idx, 'distribute'] = under_collector
+#                         df.at[under_idx, 'distribute'] = over_collector
+
+#                         # Update totals
+#                         principal_sum_per_collector[over_collector] = over_new
+#                         principal_sum_per_collector[under_collector] = under_new
+#                         break  # Swap done
+#                 else:
+#                     continue
+#                 break  # Move to next over_collector
+
+#     return df
+def flatten_distribution_by_principal(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    # Track swapped pairs (pair is sorted lexicographically to handle both directions)
+    swapped_pairs = set()
+
+    while True:
+        # Step 1: Total principal per team
+        principal_sum = df.groupby('distribute')['principal_balance'].sum().to_dict()
+
+        # Step 2: Calculate median
+        median_principal = np.average(list(principal_sum.values()))
+
+        # Step 3: Identify overload and underload
+        diff_from_median = {team: total - median_principal for team, total in principal_sum.items()}
+        overload_teams = {team: diff for team, diff in diff_from_median.items() if diff > 0}
+        underload_teams = {team: -diff for team, diff in diff_from_median.items() if diff < 0}
+
+        # Step 4: Check if no more imbalance exists (exit condition)
+        if not overload_teams or not underload_teams:
+            print("All teams are balanced.")
+            break
+
+        # Sort overloaded and underloaded teams
+        overload_list = sorted(overload_teams.items(), key=lambda x: -x[1])
+        underload_list = sorted(underload_teams.items(), key=lambda x: -x[1])
+
+        swapped = False
+
+        # Step 5: Start pairing overloaded teams with underloaded teams
+        for (over_team, over_diff), (under_team, under_diff) in zip(overload_list, underload_list):
+            # Check if this pair has been swapped more than twice
+            pair_key = tuple(sorted([over_team, under_team]))
+            if pair_key in swapped_pairs:
                 continue
-            over_accounts = df[df['distribute'] == over_collector].sort_values('principal_balance', ascending=False)
-            under_accounts = df[df['distribute'] == under_collector].sort_values('principal_balance')
 
-            for over_idx, over_row in over_accounts.iterrows():
-                for under_idx, under_row in under_accounts.iterrows():
-                    over_new = (principal_sum_per_collector[over_collector]
-                                - over_row['principal_balance']
-                                + under_row['principal_balance'])
-                    under_new = (principal_sum_per_collector[under_collector]
-                                - under_row['principal_balance']
-                                + over_row['principal_balance'])
+            over_accounts = df[df['distribute'] == over_team].copy()
+            under_accounts = df[df['distribute'] == under_team].copy()
 
-                    if (abs(over_new - median_principal) < abs(principal_sum_per_collector[over_collector] - median_principal)) and \
-                       (abs(under_new - median_principal) < abs(principal_sum_per_collector[under_collector] - median_principal)):
+            if under_accounts.empty or over_accounts.empty:
+                continue
 
-                        df.at[over_idx, 'distribute'] = under_collector
-                        df.at[under_idx, 'distribute'] = over_collector
+            # Minimum principal from the underloaded team
+            min_under_val = under_accounts['principal_balance'].min()
 
-                        principal_sum_per_collector[over_collector] = over_new
-                        principal_sum_per_collector[under_collector] = under_new
-                        break  
-                else:
-                    continue
-                break
+            # Target for the overloaded account: overloaded difference + minimum underloaded account
+            target_val = over_diff + min_under_val
+
+            # Find the account from the overloaded team closest to the target
+            over_candidate = over_accounts.iloc[
+                (over_accounts['principal_balance'] - target_val).abs().argsort()
+            ].head(1)
+
+            # Find the smallest account from the underloaded team
+            under_candidate = under_accounts.nsmallest(1, 'principal_balance')
+
+            if not over_candidate.empty and not under_candidate.empty:
+                over_idx = over_candidate.index[0]
+                under_idx = under_candidate.index[0]
+
+                over_val = df.loc[over_idx, 'principal_balance']
+                under_val = df.loc[under_idx, 'principal_balance']
+
+                # Perform the swap: update only the distribute column
+                df.at[over_idx, 'distribute'] = under_team
+                df.at[under_idx, 'distribute'] = over_team
+
+                # Print the swap details
+                # print(f"Swapping accounts:")
+                # print(f"  - From {over_team}: {df.loc[over_idx, 'contract_no']} (Principal: {over_val})")
+                # print(f"  - To   {under_team}: {df.loc[under_idx, 'contract_no']} (Principal: {under_val})\n")
+
+                swapped = True
+                swapped_pairs.add(pair_key)  # Mark this pair as swapped
+                break  # After a successful swap, break and recheck
+
+        # If no swap occurred, exit the loop (all teams are now balanced)
+        if not swapped:
+            print("No more possible swaps. All teams are now balanced.")
+            break
+
     return df
-
 
 def process_distribution_by_groups_inhouse(df, group_fields, oa_proportion_collector):
     combined_dfs = []

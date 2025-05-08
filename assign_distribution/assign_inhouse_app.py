@@ -11,6 +11,7 @@ def assign_inhouse_app() :
     oa_proportion_path = glob.glob("./assign_distribution/input/portion/*")[0].split('\\')[-1] 
     oa_proportion = read_file('./assign_distribution/input/portion/',oa_proportion_path)
     oa_proportion = clean_column_names(oa_proportion)
+    
 
     assign_path = glob.glob("./assign_distribution/input/assign/*")[0].split('\\')[-1]  
     assign = read_file('./assign_distribution/input/assign/',assign_path)
@@ -20,12 +21,18 @@ def assign_inhouse_app() :
     param = read_file('./assign_distribution/input/parameter/',parameter_path)
     param = clean_column_names(param)
     param = clean_data(param)
-
     assign = assign.sort_values(by='principal_balance', ascending=False)
     
+    # file_assign = glob.glob("./cscore/input/assign_data/*.xlsx") 
+    # file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])
     
-
+    
     group_fields = list(param['parameter'])
     final_df = process_distribution_by_groups_inhouse(assign, group_fields, oa_proportion)
-    final_df.to_excel('./assign_distribution/output/assign-inhouse-output.xlsx')
+    
+    final_df['contract_no'] =  final_df['contract_no'].astype(str)
+    
+    file_assign = glob.glob("./assign_distribution/input/assign/*.xlsx")
+    file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])
+    final_df.to_excel(f'./assign_distribution/output/assign_inhouse_{file_path}.xlsx', index=False)
     # print('final_df',final_df)

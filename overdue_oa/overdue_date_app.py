@@ -44,8 +44,15 @@ def overdue_date_app():
 
     def find_stamp_date(row):
         for i in range(len(date_cols) - 1):
-            if row[date_cols[i + 1]] < row[date_cols[i]]:
+            val_current = row[date_cols[i]]
+            val_next = row[date_cols[i + 1]]
+
+            if pd.isna(val_current) or pd.isna(val_next):
+                continue 
+
+            if val_next < val_current:
                 return date_cols[i + 1]
+
         return ""
 
     def subtract_one_day(date_str):

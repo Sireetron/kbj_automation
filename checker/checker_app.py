@@ -39,6 +39,7 @@ def checker():
         #     os.getenv("ORACLE_JARS")
         # )
         sms_type = pd.read_sql("SELECT * FROM SUPAT.REF_SMS_WORDING", conn_oracle)
+        # print('sms_type',sms_type)
         # today_str = datetime.today().strftime('%Y-%m-%d')
         # csv_path = f'./checker/input/customer_input/customer_{today_str}.csv'
 
@@ -109,11 +110,11 @@ def checker():
 
     customer_file_name = glob.glob("./checker/input/customer_input/*") 
     customer_file_name = customer_file_name[0].split('\\')[1]
-    customer = read_file('./checker/input/customer_input/',customer_file_name)
-    customer = clean_column_names(customer)
+    # customer = read_file('./checker/input/customer_input/',customer_file_name)
+    # customer.columns = customer.columns.str.lower()
+    # print('customer',customer)
     
-    
-    customer = pd.read_csv('./checker/input/customer_input/customer.csv', dtype={
+    customer = pd.read_csv(f'./checker/input/customer_input/{customer_file_name}', dtype={
                 'MOBILE_PHONE_NO_VAL': str,
                 'NATIONAL_ID': str,
                 'CONTRACT_NO_VAL': str
@@ -140,6 +141,8 @@ def checker():
         axis=1
     )
     assign_delay_merge['last4digit_val'] = assign_delay_merge['contract_no'].str[-4:]
+    assign_delay_merge['last4digit_val'] = assign_delay_merge['last4digit_val'].astype(str)
+    # print('assign_delay_merge',assign_delay_merge[''])
     assign_delay_merge['sms_wording'] =  assign_delay_merge.apply(
         lambda row: row['sms_wording'].replace("{4digit}", str(row['last4digit_val']))
         if "{4digit}" in row['sms_wording'] else row['sms_wording'],
@@ -222,7 +225,9 @@ def checker():
         axis=1
     )
 
-    assign_delay_merge.to_excel('./checker/output/smscheck.xlsx', index=False)
+    file_assign = glob.glob("./checker/input/assign_input/*.xlsx")
+    file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])
+    assign_delay_merge.to_excel(f'./checker/output/smscheck_{file_path}.xlsx', index=False)
     # with ExcelWriter('./checker/input/assign_input/Template SMS SF+ non assign 17042025 (BASE).xlsx', engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
     #     assign_delay_merge.to_excel(writer, sheet_name='check', index=False)
     

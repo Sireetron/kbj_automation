@@ -6,13 +6,14 @@ from werkzeug.utils import secure_filename
 from checker.checker_app import checker
 from flask import session
 import glob
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey'
 app.config['UPLOAD_FOLDER_SMS'] = './checker/input/assign_input'
 app.config['UPLOAD_FOLDER_ACC'] = './checker/input/acc'
 app.config['DOWNLOAD_FOLDER_SMS'] = './checker/output' 
-app.config['UPLOAD_FOLDER_ACC'] = './checker/input/customer_input' 
+app.config['UPLOAD_FOLDER_CUSTOMER'] = './checker/input/customer_input' 
 # app.config['DOWNLOAD_CSCORE'] = 'cscore/output/' 
 
 
@@ -30,7 +31,7 @@ def sms_checker_service():
     folder_mapping = {
         'assign_input': 'UPLOAD_FOLDER_SMS',
         'acc': 'UPLOAD_FOLDER_ACC',
-        'customer' :'UPLOAD_FOLDER_ACC'
+        'customer' :'UPLOAD_FOLDER_CUSTOMER'
     }
     folder_name = 'sms-checker'
     form = UploadFileForm()
@@ -68,8 +69,10 @@ def sms_checker_service():
                     session['messages'].append(message)  # Append message to session
                 else:
                     session['messages'].append(f"No valid files uploaded to {section}.")
-
+                    
+    file_assign = glob.glob("./checker/input/assign_input/*.xlsx")
+    file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])
                 # download_filename = saved_files[0] if saved_files else None 
            
         
-    return render_template('checker.html', form=form, download_filename=f'smscheck.xlsx', messages=session.get('messages', []), folder_name=folder_name, table=table_checker)
+    return render_template('checker.html', form=form, download_filename=f'smscheck_{file_path}.xlsx', messages=session.get('messages', []), folder_name=folder_name, table=table_checker)

@@ -60,7 +60,48 @@ class PostgresConnector:
                     else:
                         query_insert += f"'{value}', "
                 query_insert = query_insert.rstrip(', ') + f") ON CONFLICT ON CONSTRAINT {constraint} DO NOTHING; "
+                # query_insert = query_insert.rstrip(', ') + f') ON CONFLICT ("{constraint}") DO NOTHING;
             self.cursor.execute(query_insert)
+            
+            
+    def upserttt(self, df, table, chunk_size, conflict_column):
+        if not self.connection:
+            self.connect()
+
+        for chunk_start in range(0, len(df), chunk_size):
+            chunk_end = min(chunk_start + chunk_size, len(df))
+            chunk_df = df.iloc[chunk_start:chunk_end]
+
+            for _, row in chunk_df.iterrows():
+                columns = list(df.columns)
+                quoted_columns = [f'"{col}"' for col in columns]
+                values = []
+
+                for col in columns:
+                    val = row[col]
+                    if pd.isnull(val):
+                        values.append("NULL")
+                    else:
+                        # Escape single quotes
+                        values.append(f"'{str(val).replace("'", "''")}'")
+
+                insert_part = f"INSERT INTO {table} ({', '.join(quoted_columns)})"
+                values_part = f"VALUES ({', '.join(values)})"
+
+                # Build update part, excluding conflict column
+                update_columns = [col for col in columns if col != conflict_column]
+                update_part = ', '.join([f'"{col}" = EXCLUDED."{col}"' for col in update_columns])
+
+                query = f"""
+                    {insert_part}
+                    {values_part}
+                    ON CONFLICT ("{conflict_column}")
+                    DO UPDATE SET {update_part};
+                """
+                self.cursor.execute(query)
+
+
+
 
     def hello(self):
         print('hello')

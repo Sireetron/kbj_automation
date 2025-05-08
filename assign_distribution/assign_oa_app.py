@@ -27,5 +27,10 @@ def assign_oa_app() :
 
     group_fields = list(param['parameter'])
     final_df = process_distribution_by_groups_oa(assign, group_fields, oa_proportion)
-    final_df.to_excel('./assign_distribution/output/assign-oa-output.xlsx')
+    final_df['contract_no'] =  final_df['contract_no'].astype(str)
+    
+    
+    file_assign = glob.glob("./assign_distribution/input/assign/*.xlsx")
+    file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])
+    final_df.to_excel(f'./assign_distribution/output/assign_oa_{file_path}.xlsx', index=False)
     # print('final_df',final_df)

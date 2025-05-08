@@ -159,6 +159,16 @@ def cscore_app() :
     for file in glob.glob(os.path.join(output_dir, "*")):
         os.remove(file)
     data_cscore.to_csv(f'./cscore/output/all_csore.csv',index=False)
+    result = data_cscore.groupby('final_score').agg({
+            'final_score': 'count',
+            'principal_bal': 'sum'
+        }).rename(columns={
+            'final_score': 'count',
+            'principal_bal': 'total_principal_bal'
+        }).reset_index()
+    result.to_excel('./cscore/output/all_csore_summary.xlsx')
+        
+    
     # save_to_split_excel(data_cscore,'./cscore/output/all_cscore.xlsx')
 
 
@@ -169,13 +179,15 @@ def cscore_app() :
     if len(file_assign)>=1:
         data_assign = pd.read_excel(file_assign[0])
         data_assign = clean_column_names(data_assign)
-        data_assign = data_assign[['contract_no']]
+        # data_assign = data_assign[['contract_no']]
         data_assign['contract_no'] = data_assign['contract_no'].astype(str)
         data_cscore['contract_no'] = data_cscore['contract_no'].astype(str)
 
         # final redult
         file_path =  re.sub(r'\.(csv|xlsx)$', '', file_assign[0].split('\\')[1])
         cscore_assigned = data_assign.merge(data_cscore,left_on='contract_no',right_on='contract_no',how='left')
+        # print('cscore_assigned',cscore_assigned)
         # cscore_assigned = cscore_assigned[['contract_no','final_score']]
-        cscore_assigned.to_excel(f'./cscore/output_backup/cscore_assigned_{file_path}_createat{timestamp}.xlsx',index=False)
+        # cscore_assigned.to_excel(f'./cscore/output_backup/cscore_assigned_{file_path}_createat{timestamp}.xlsx',index=False)
+        # cscore_assigned.to_csv('./cscore/output/cscore_assigned.csv',index=False)
         cscore_assigned.to_excel(f'./cscore/output/cscore_assigned_{file_path}.xlsx',index=False)
