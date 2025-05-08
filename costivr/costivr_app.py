@@ -64,6 +64,8 @@ def costivr_app():
                             'count':'number_of_hangup_call (call)','total_cost':'cost (baht)','remain(call)':'remain_call_in_month(call)'})
     log=log.rename(columns={'number_of_hangup_calls':'number_of_hangup_calls (call)',
                             'total_calls':'total_calls (call)','ptp_count':'number_of_ptp (call)'})
+    
+    log = log.sort_values('date').reset_index(drop=True)
     with pd.ExcelWriter('./costivr/output/costivr.xlsx', engine='openpyxl') as writer:
         monthly.to_excel(writer, sheet_name='monthly', index=False)
-        log.to_excel(writer, sheet_name='log')
+        log.to_excel(writer, sheet_name='log', index=False)
